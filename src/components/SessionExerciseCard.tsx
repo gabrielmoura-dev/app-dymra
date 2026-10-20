@@ -6,6 +6,7 @@ import { getExercise, getMachine, loadStepFor } from '@/catalog';
 import type { SessionExerciseRow, SetRow } from '@/db/repo';
 import type { Suggestion } from '@/logic/progression';
 import type { Effort } from '@/logic/types';
+import { useStepOverrides } from '@/state/userCatalog';
 import { colors, radius, spacing } from '@/theme';
 
 import { Stepper, TextField } from './inputs';
@@ -34,6 +35,7 @@ export interface SessionExerciseCardProps {
 export function SessionExerciseCard(p: SessionExerciseCardProps) {
   const ex = getExercise(p.item.exercicio_id);
   const original = p.item.substituto_de ? getExercise(p.item.substituto_de) : null;
+  const overrides = useStepOverrides();
   const [showTech, setShowTech] = useState(false);
   const [showNote, setShowNote] = useState(false);
   const [note, setNote] = useState(p.note);
@@ -52,7 +54,7 @@ export function SessionExerciseCard(p: SessionExerciseCardProps) {
     );
   }
 
-  const step = loadStepFor(ex);
+  const step = loadStepFor(ex, overrides);
   const machine = getMachine(ex.maquinaIds[0]);
   const done = p.sets.filter((s) => s.concluida === 1).length;
   const allDone = done === p.sets.length && p.sets.length > 0;
@@ -137,25 +139,33 @@ export function SessionExerciseCard(p: SessionExerciseCardProps) {
       ) : null}
 
       <View style={{ gap: spacing.sm }}>
-        {p.sets.map((s, i) => {
+        {p.sets.map((s) => {
           const ok = s.concluida === 1;
+          const aquec = s.aquecimento === 1;
+          // Aquecimento não conta na numeração das séries de trabalho.
+          const n = p.sets.filter((x) => x.aquecimento === 0 && x.ordem <= s.ordem).length;
+          const titulo = aquec ? 'Aquecimento' : `Série ${n}`;
           return (
             <View key={s.id} style={[styles.setRow, ok && styles.setRowDone]}>
               <Row style={{ justifyContent: 'space-between' }}>
                 <Pressable
                   onLongPress={() =>
-                    Alert.alert(`Série ${i + 1}`, 'Remover esta série?', [
+                    Alert.alert(titulo, 'Remover esta série?', [
                       { text: 'Cancelar', style: 'cancel' },
                       { text: 'Remover', style: 'destructive', onPress: () => p.onRemoveSet(s.id) },
                     ])
                   }
                   style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 }}>
-                  <View style={[styles.setNumber, ok && { backgroundColor: colors.accent }]}>
-                    <Txt bold color={ok ? colors.accentText : colors.muted}>
-                      {i + 1}
-                    </Txt>
+                  <View style={[styles.setNumber, aquec && styles.setWarm, ok && { backgroundColor: aquec ? colors.warning : colors.accent }]}>
+                    {aquec ? (
+                      <Icon name="flame-outline" size={18} color={ok ? colors.accentText : colors.warning} />
+                    ) : (
+                      <Txt bold color={ok ? colors.accentText : colors.muted}>
+                        {n}
+                      </Txt>
+                    )}
                   </View>
-                  {ok ? (
+                  {ok && !aquec ? (
                     <Row gap={4} wrap style={{ flex: 1 }}>
                       {EFFORTS.map((e) => (
                         <Chip
@@ -168,13 +178,15 @@ export function SessionExerciseCard(p: SessionExerciseCardProps) {
                       ))}
                     </Row>
                   ) : (
-                    <Txt variant="tiny">Série {i + 1}</Txt>
+                    <Txt variant="tiny" color={aquec ? colors.warning : undefined}>
+                      {aquec ? 'Aquecimento · carga leve, sem cansar' : titulo}
+                    </Txt>
                   )}
                 </Pressable>
                 <Pressable
                   accessibilityRole="checkbox"
                   accessibilityState={{ checked: ok }}
-                  accessibilityLabel={`Concluir série ${i + 1}`}
+                  accessibilityLabel={`Concluir ${titulo.toLowerCase()}`}
                   onPress={() => p.onToggleSet(s, !ok)}
                   style={[styles.check, ok && { backgroundColor: colors.accent, borderColor: colors.accent }]}>
                   <Icon name="checkmark" size={24} color={ok ? colors.accentText : colors.faint} />
@@ -232,6 +244,7 @@ const styles = StyleSheet.create({
   },
   setRow: { gap: 6, padding: 6, borderRadius: radius.md },
   setRowDone: { backgroundColor: 'rgba(184, 255, 60, 0.06)' },
+  setWarm: { borderWidth: 1, borderColor: colors.warning },
   setNumber: {
     width: 32,
     height: 32,

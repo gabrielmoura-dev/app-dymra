@@ -68,6 +68,8 @@ function Gate() {
       <Stack.Screen name="scanner" options={{ title: 'Ler QR code', presentation: 'modal' }} />
       <Stack.Screen name="trocar" options={{ title: 'Máquina ocupada', presentation: 'modal' }} />
       <Stack.Screen name="adicionar" options={{ title: 'Adicionar exercício', presentation: 'modal' }} />
+      <Stack.Screen name="ficha/[id]" options={{ title: 'Editar ficha' }} />
+      <Stack.Screen name="gerar-ficha" options={{ title: 'Gerar ficha' }} />
     </Stack>
   );
 }

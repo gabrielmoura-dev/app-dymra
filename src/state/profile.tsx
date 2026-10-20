@@ -3,6 +3,8 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 
 import { getProfile, updateProfile as updateProfileDb, type Profile } from '@/db/repo';
 
+import { loadUserCatalog } from './userCatalog';
+
 interface ProfileContextValue {
   profile: Profile | null;
   loading: boolean;
@@ -18,6 +20,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
+    await loadUserCatalog(db).catch(() => {});
     setProfile(await getProfile(db));
     setLoading(false);
   }, [db]);
@@ -32,7 +35,8 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let alive = true;
-    getProfile(db).then((p) => {
+    // O catálogo do usuário (fichas próprias, passo de carga) carrega junto, antes da primeira tela.
+    Promise.all([getProfile(db), loadUserCatalog(db).catch(() => {})]).then(([p]) => {
       if (!alive) return;
       setProfile(p);
       setLoading(false);
@@ -66,6 +70,7 @@ const PLACEHOLDER: Profile = {
   lembreteTreinoDias: [],
   lembreteTreinoHora: 18,
   ultimoBackupEm: null,
+  sugerirAquecimento: true,
   criadoEm: '',
 };
 

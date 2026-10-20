@@ -1,25 +1,24 @@
-# Dúvidas para você responder
+# Dúvidas
 
-Nada aqui bloqueou o desenvolvimento: onde precisei decidir, escolhi o padrão mais seguro e anotei. Responda quando puder (pode ser só o número e a resposta).
+## Respondidas em 19/10/2026
 
-## Precisam de você para o app chegar no celular
+| # | Pergunta | Resposta | O que mudou no app |
+|---|---|---|---|
+| 1 | Conta Expo | Criada (a mesma do Expo Go) | Falta rodar os comandos do README para gerar o APK |
+| 2 | Nomes | Gabriel e Rita | O cadastro oferece "Gabriel" e "Rita" com um toque; a ficha gerada se chama "Ficha de …" |
+| 3 | Fichas | Onboarding para definir os treinos, com opção de pular e montar o próprio | Cadastro em 2 etapas. Na segunda: **Montar uma ficha para mim** (dias por semana, tempo e prioridade → o app monta com as máquinas do catálogo), **Usar uma ficha pronta** ou **Pular e montar o meu** (abre o editor com uma ficha vazia). Em Fichas dá para gerar outra, montar do zero e editar (séries, reps, descanso, ordem, dias) |
+| 4 | Passo de carga | Um campo para cadastrar a evolução dos pesos | Na tela de cada máquina há o campo **Passo de carga** (de quanto em quanto o peso sobe). Vale para os botões − / + e para as sugestões. Entendi "evolução dos pesos" como esse passo; se era outra coisa, me diga |
+| 5 | Catálogo de exemplo | Manter as máquinas que existem na academia e remover as outras | Feito quando você mandar a lista/fotos |
+| 6 | Relógio | Gabriel ainda vai comprar; Rita não lembra o modelo | Nada a fazer: sem relógio, as calorias saem pela estimativa (MET). Ao comprar, prefira um que sincronize com o Health Connect |
+| 7 | App do Claude | Os dois têm instalado | — |
+| 8 | Lembrete de água | A cada 2 h, das 9h às 19h | Mantido |
+| 9 | Aquecimento | Sim, sugerir | No primeiro exercício pesado de pernas e no de tronco, o treino já vem com 1×12 a ~50% da carga (e, de 30 kg para cima, mais 1×6 a ~75%). Aparece com chama laranja, não conta em volume nem recordes e o descanso depois dele é curto. Dá para desligar em Perfil → Treino |
+| 10 | Fotos no backup | Não precisa | As fotos de progresso ficam só no celular e não entram no backup. Fichas próprias e passos de carga entram |
 
-1. **Conta Expo.** Para gerar o APK e mandar atualizações é preciso uma conta gratuita em expo.dev. Você cria a conta (eu não posso criar contas), depois rodamos juntos os comandos do README. Prefere fazer isso numa próxima sessão comigo?
-2. **Nome da sua amiga** (ou apelido), para nomear a ficha dela no app ("Ficha da …"). Hoje as fichas de exemplo aparecem como "de Exemplo".
+## Ainda em aberto
 
-## Sobre o conteúdo
-
-3. **Fichas.** Mande a sua e a dela com séries × repetições × descanso. Se a academia/personal usa outra notação (ex.: "3×15/12/10", bi-set, drop-set), me avise: hoje o app trata cada exercício com uma faixa de repetições (ex.: 10–12). Bi-set e drop-set ainda não têm tela própria.
-4. **Passo de carga das máquinas.** Usei 5 kg nas máquinas de placas, 2,5 kg nas polias e 2 kg nos halteres. Quando fotografar as máquinas, anote de quanto em quanto o peso sobe em cada uma: isso afeta as sugestões de "suba para X kg".
-5. **Catálogo de exemplo.** Quando chegarem as máquinas reais, removo as 24 de exemplo ou mantenho as que existirem na academia (e os exercícios com halteres/colchonete, que existem em qualquer academia)?
-
-## Sobre funcionalidades
-
-6. **Relógio.** Qual relógio/pulseira vocês usam (Samsung, Xiaomi, Amazfit, Garmin…)? As calorias do resumo só vêm do relógio se o app dele sincronizar com o Health Connect. Samsung Health sincroniza; outros às vezes exigem ativar nas configurações.
-7. **Analisar no Claude.** O app abre o compartilhamento do Android com a foto e já copia o texto. Isso precisa de teste no celular: alguns apps aceitam foto + texto juntos, outros só a foto (aí é só colar o texto). Vocês já têm o app do Claude instalado? Sua amiga vai usar a conta dela?
-8. **Lembretes de água.** Coloquei a cada 2 h, das 9h às 19h. Bom assim ou prefere outro horário?
-9. **Aquecimento.** O banco já guarda se uma série é de aquecimento, mas não há botão para isso na tela de treino. Querem que o app sugira séries de aquecimento (ex.: 1×12 com 50% da carga) antes do primeiro exercício pesado?
-10. **Fotos de progresso.** Ficam só no celular e entram no backup. Ok, ou preferem que nem entrem no backup (arquivo menor)?
+- **Catálogo**: máquinas (foto, nome, passo de carga), exercícios de cada uma e links do YouTube. Veja [CATALOGO.md](CATALOGO.md).
+- **Fichas do personal/academia**: se vocês tiverem fichas prontas, mando para "Fichas prontas" com o nome de cada um. O cadastro já marca a ficha de quem tiver o mesmo nome.
 
 ## Decisões que tomei sozinho (só confirme se discordar)
 
@@ -28,6 +27,7 @@ Nada aqui bloqueou o desenvolvimento: onde precisei decidir, escolhi o padrão m
 - O "corpo" no cadastro tem só feminino/masculino, porque é usado apenas na estimativa de calorias e na figura do mapa muscular.
 - A recuperação muscular considera 72 h para músculos grandes e 48 h (ou 36 h) para pequenos; 6 séries "cansam" totalmente um músculo.
 - As dicas de "músculo pouco treinado" só aparecem depois de um ciclo completo da ficha na semana, para não incomodar no começo.
+- A ficha gerada prefere máquinas guiadas a halteres e Smith, por serem mais seguras para iniciantes. Cada treino começa com 5 min de bicicleta; em emagrecimento e condicionamento (45 min ou mais) termina com esteira.
 - Sem gamificação, sem social, sem login (como combinado).
 
 ## O que ainda não foi testado (precisa do celular)

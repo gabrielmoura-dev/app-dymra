@@ -3,13 +3,16 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { View } from 'react-native';
 
-import { exercisesForMachine, MACHINES } from '@/catalog';
+import { exercisesForMachine, MACHINES, machineStep } from '@/catalog';
 import { ExercisePicker } from '@/components/ExercisePicker';
 import { Button, Card, Chip, Icon, Row, Screen, Txt } from '@/components/ui';
+import { formatKg } from '@/logic/strength';
+import { useStepOverrides } from '@/state/userCatalog';
 import { colors, radius } from '@/theme';
 
 export default function Maquinas() {
   const [aba, setAba] = useState<'maquinas' | 'exercicios'>('maquinas');
+  const overrides = useStepOverrides();
   const areas = [...new Set(MACHINES.map((m) => m.area))];
 
   return (
@@ -49,7 +52,10 @@ export default function Maquinas() {
                   )}
                   <View style={{ flex: 1 }}>
                     <Txt bold>{m.nome}</Txt>
-                    <Txt variant="tiny">{exercisesForMachine(m.id).length} exercícios</Txt>
+                    <Txt variant="tiny">
+                      {exercisesForMachine(m.id).length} exercícios
+                      {machineStep(m, overrides) > 0 ? ` · sobe de ${formatKg(machineStep(m, overrides))} em ${formatKg(machineStep(m, overrides))} kg` : ''}
+                    </Txt>
                   </View>
                   <Icon name="chevron-forward" color={colors.muted} size={18} />
                 </Row>

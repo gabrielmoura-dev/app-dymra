@@ -32,6 +32,9 @@
         "android.permission.health.READ_TOTAL_CALORIES_BURNED",
         "android.permission.health.READ_HEART_RATE",
         "android.permission.VIBRATE"
+      ],
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "web": {
@@ -54,8 +57,6 @@
         "expo-build-properties",
         {
           "android": {
-            "compileSdkVersion": 36,
-            "targetSdkVersion": 36,
             "minSdkVersion": 26
           }
         }
@@ -64,14 +65,17 @@
       [
         "react-native-share",
         {
-          "android": ["com.anthropic.claude"]
+          "android": [
+            "com.anthropic.claude"
+          ]
         }
       ],
       [
         "expo-camera",
         {
           "cameraPermission": "O Dymra usa a câmera para ler o QR code das máquinas e tirar fotos de progresso.",
-          "barcodeScannerEnabled": true
+          "barcodeScannerEnabled": true,
+          "recordAudioAndroid": false
         }
       ],
       [
@@ -87,11 +91,21 @@
           "color": "#B8FF3C"
         }
       ],
-      "expo-updates"
+      "expo-updates",
+      "expo-image"
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "updates": {
+      "url": "https://u.expo.dev/f8c76920-8792-4e14-843a-b070b6abcb4a"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "f8c76920-8792-4e14-843a-b070b6abcb4a"
+      }
+    },
+    "owner": "gabrielmoura-dev"
   }
 }

@@ -1,6 +1,6 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
-import type { Goal, RoutineExercise, Sex } from '@/catalog/types';
+import type { Goal, Program, RoutineDay, RoutineExercise, Sex } from '@/catalog/types';
 import { dayKey } from '@/logic/dates';
 import type { Effort, ExerciseHistoryEntry, LoggedSet, TimedSet } from '@/logic/types';
 
@@ -20,6 +20,7 @@ export interface Profile {
   lembreteTreinoDias: number[];
   lembreteTreinoHora: number;
   ultimoBackupEm: string | null;
+  sugerirAquecimento: boolean;
   criadoEm: string;
 }
 
@@ -37,6 +38,7 @@ interface ProfileRow {
   lembrete_treino_dias: string;
   lembrete_treino_hora: number;
   ultimo_backup_em: string | null;
+  sugerir_aquecimento: number;
   criado_em: string;
 }
 
@@ -66,6 +68,7 @@ export async function getProfile(db: SQLiteDatabase): Promise<Profile | null> {
     lembreteTreinoDias: parseDays(r.lembrete_treino_dias),
     lembreteTreinoHora: r.lembrete_treino_hora,
     ultimoBackupEm: r.ultimo_backup_em,
+    sugerirAquecimento: r.sugerir_aquecimento !== 0,
     criadoEm: r.criado_em,
   };
 }
@@ -104,6 +107,7 @@ const PROFILE_COLUMNS: Record<keyof Omit<Profile, 'criadoEm'>, string> = {
   lembreteTreinoDias: 'lembrete_treino_dias',
   lembreteTreinoHora: 'lembrete_treino_hora',
   ultimoBackupEm: 'ultimo_backup_em',
+  sugerirAquecimento: 'sugerir_aquecimento',
 };
 
 export async function updateProfile(db: SQLiteDatabase, patch: Partial<Omit<Profile, 'criadoEm'>>) {
@@ -175,6 +179,8 @@ export interface SessionDetail {
 export interface PlannedExercise extends RoutineExercise {
   pesoSugeridoKg: number | null;
   repsSugeridas: number | null;
+  /** Séries de aquecimento inseridas antes das séries de trabalho. */
+  aquecimento?: { pesoKg: number | null; reps: number }[];
 }
 
 export async function startSession(
@@ -226,11 +232,21 @@ async function insertSessionExercise(
     ex.duracaoSeg ?? null,
   );
   const seId = res.lastInsertRowId;
+  const warmups = ex.aquecimento ?? [];
+  for (let w = 0; w < warmups.length; w++) {
+    await db.runAsync(
+      `INSERT INTO sets (session_exercise_id, ordem, peso_kg, reps, aquecimento) VALUES (?, ?, ?, ?, 1)`,
+      seId,
+      w,
+      warmups[w].pesoKg,
+      warmups[w].reps,
+    );
+  }
   for (let s = 0; s < ex.series; s++) {
     await db.runAsync(
       `INSERT INTO sets (session_exercise_id, ordem, peso_kg, reps, duracao_seg) VALUES (?, ?, ?, ?, ?)`,
       seId,
-      s,
+      warmups.length + s,
       ex.pesoSugeridoKg,
       ex.repsSugeridas,
       ex.duracaoSeg ?? null,
@@ -309,13 +325,17 @@ export async function setCompleted(db: SQLiteDatabase, setId: number, done: bool
 
 export async function addSet(db: SQLiteDatabase, sessionExerciseId: number) {
   const last = await db.getFirstAsync<SetRow>(
-    'SELECT * FROM sets WHERE session_exercise_id = ? ORDER BY ordem DESC LIMIT 1',
+    'SELECT * FROM sets WHERE session_exercise_id = ? ORDER BY aquecimento ASC, ordem DESC LIMIT 1',
+    sessionExerciseId,
+  );
+  const maxOrdem = await db.getFirstAsync<{ m: number | null }>(
+    'SELECT MAX(ordem) AS m FROM sets WHERE session_exercise_id = ?',
     sessionExerciseId,
   );
   await db.runAsync(
     'INSERT INTO sets (session_exercise_id, ordem, peso_kg, reps, duracao_seg) VALUES (?, ?, ?, ?, ?)',
     sessionExerciseId,
-    (last?.ordem ?? -1) + 1,
+    (maxOrdem?.m ?? -1) + 1,
     last?.peso_kg ?? null,
     last?.reps ?? null,
     last?.duracao_seg ?? null,
@@ -714,5 +734,70 @@ export async function getWaterByDay(db: SQLiteDatabase, sinceDay: string): Promi
   return db.getAllAsync<{ dia: string; total: number }>(
     'SELECT dia, SUM(ml) AS total FROM water_log WHERE dia >= ? GROUP BY dia ORDER BY dia',
     sinceDay,
+  );
+}
+
+// ---------- Fichas criadas no celular ----------
+
+interface CustomProgramRow {
+  id: string;
+  nome: string;
+  dono: string;
+  descricao: string;
+  dias: string;
+}
+
+function parseDias(raw: string): RoutineDay[] {
+  try {
+    const v = JSON.parse(raw);
+    return Array.isArray(v) ? v : [];
+  } catch {
+    return [];
+  }
+}
+
+export async function listCustomPrograms(db: SQLiteDatabase): Promise<Program[]> {
+  const rows = await db.getAllAsync<CustomProgramRow>('SELECT * FROM custom_programs ORDER BY criado_em');
+  return rows.map((r) => ({ id: r.id, nome: r.nome, dono: r.dono, descricao: r.descricao, dias: parseDias(r.dias) }));
+}
+
+export async function upsertCustomProgram(db: SQLiteDatabase, p: Program) {
+  const now = new Date().toISOString();
+  await db.runAsync(
+    `INSERT INTO custom_programs (id, nome, dono, descricao, dias, criado_em, atualizado_em)
+     VALUES (?, ?, ?, ?, ?, ?, ?)
+     ON CONFLICT(id) DO UPDATE SET nome = excluded.nome, dono = excluded.dono, descricao = excluded.descricao,
+       dias = excluded.dias, atualizado_em = excluded.atualizado_em`,
+    p.id,
+    p.nome,
+    p.dono,
+    p.descricao,
+    JSON.stringify(p.dias),
+    now,
+    now,
+  );
+}
+
+export async function deleteCustomProgram(db: SQLiteDatabase, id: string) {
+  await db.runAsync('DELETE FROM custom_programs WHERE id = ?', id);
+}
+
+// ---------- Passo de carga cadastrado por máquina ----------
+
+export async function listMachineSteps(db: SQLiteDatabase): Promise<Record<string, number>> {
+  const rows = await db.getAllAsync<{ maquina_id: string; passo_kg: number }>('SELECT * FROM machine_steps');
+  return Object.fromEntries(rows.map((r) => [r.maquina_id, r.passo_kg]));
+}
+
+/** `passoKg` nulo volta ao valor do catálogo. */
+export async function setMachineStep(db: SQLiteDatabase, maquinaId: string, passoKg: number | null) {
+  if (passoKg == null) {
+    await db.runAsync('DELETE FROM machine_steps WHERE maquina_id = ?', maquinaId);
+    return;
+  }
+  await db.runAsync(
+    'INSERT INTO machine_steps (maquina_id, passo_kg) VALUES (?, ?) ON CONFLICT(maquina_id) DO UPDATE SET passo_kg = excluded.passo_kg',
+    maquinaId,
+    passoKg,
   );
 }

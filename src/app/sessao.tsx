@@ -97,7 +97,7 @@ export default function Sessao() {
           db,
           {
             exercicioId: item.exercicio_id,
-            series: sets.length,
+            series: sets.filter((s) => s.aquecimento === 0).length,
             repsMin: item.reps_min,
             repsMax: item.reps_max,
             descansoSeg: item.descanso_seg,
@@ -144,7 +144,8 @@ export default function Sessao() {
     patchSetLocal(setId, local);
     await updateSet(db, setId, patch);
 
-    // Peso/reps/tempo novos descem para as próximas séries ainda não feitas que tinham o mesmo valor.
+    // Peso/reps/tempo novos descem para as próximas séries ainda não feitas que tinham o mesmo valor
+    // (aquecimento só passa para aquecimento, série de trabalho só para série de trabalho).
     const group = detail?.exercises.find((e) => e.sets.some((s) => s.id === setId));
     if (!group) return;
     const idx = group.sets.findIndex((s) => s.id === setId);
@@ -155,7 +156,7 @@ export default function Sessao() {
       ['duracaoSeg', 'duracao_seg'],
     ];
     for (const next of group.sets.slice(idx + 1)) {
-      if (next.concluida === 1) continue;
+      if (next.concluida === 1 || next.aquecimento !== old.aquecimento) continue;
       const nextPatch: typeof patch = {};
       const nextLocal: Partial<SetRow> = {};
       for (const [pk, col] of fields) {
@@ -185,7 +186,9 @@ export default function Sessao() {
     await setCompleted(db, set.id, done);
     if (done) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-      startRest(descanso || profile.descansoPadraoSeg, nextLabel(seId, set.id));
+      const pausa = descanso || profile.descansoPadraoSeg;
+      // Depois do aquecimento basta uma pausa curta.
+      startRest(set.aquecimento === 1 ? Math.min(pausa, 60) : pausa, nextLabel(seId, set.id));
     }
   };
 

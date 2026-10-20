@@ -6,8 +6,6 @@ import type { SQLiteDatabase } from 'expo-sqlite';
 import { BACKUP_TABLES, DATABASE_VERSION } from '@/db/schema';
 import { dayKey } from '@/logic/dates';
 
-import { photoFile, writePhotoFromBase64 } from './photos';
-
 type Row = Record<string, string | number | null>;
 
 interface BackupFile {
@@ -16,24 +14,13 @@ interface BackupFile {
   schema: number;
   criadoEm: string;
   tabelas: Record<string, Row[]>;
-  fotos: Record<string, string>;
 }
 
-/** Gera o arquivo de backup e abre o compartilhamento (Drive, WhatsApp, e-mail...). */
+/** Gera o arquivo de backup (sem as fotos de progresso) e abre o compartilhamento (Drive, WhatsApp, e-mail...). */
 export async function exportBackup(db: SQLiteDatabase): Promise<void> {
   const tabelas: Record<string, Row[]> = {};
   for (const t of BACKUP_TABLES) {
     tabelas[t] = await db.getAllAsync<Row>(`SELECT * FROM ${t}`);
-  }
-  const fotos: Record<string, string> = {};
-  for (const row of tabelas.progress_photos ?? []) {
-    const nome = String(row.arquivo);
-    try {
-      const f = photoFile(nome);
-      if (f.exists) fotos[nome] = await f.base64();
-    } catch {
-      // foto apagada manualmente: segue sem ela
-    }
   }
   const data: BackupFile = {
     app: 'dymra',
@@ -41,7 +28,6 @@ export async function exportBackup(db: SQLiteDatabase): Promise<void> {
     schema: DATABASE_VERSION,
     criadoEm: new Date().toISOString(),
     tabelas,
-    fotos,
   };
   const file = new File(Paths.cache, `dymra-backup-${dayKey()}.json`);
   if (file.exists) file.delete();
@@ -58,7 +44,7 @@ export async function exportBackup(db: SQLiteDatabase): Promise<void> {
 
 export class BackupError extends Error {}
 
-/** Restaura um backup. Substitui TODOS os dados atuais. */
+/** Restaura um backup. Substitui todos os dados atuais, menos as fotos de progresso. */
 export async function importBackup(db: SQLiteDatabase): Promise<boolean> {
   const picked = await DocumentPicker.getDocumentAsync({
     type: ['application/json', 'text/plain', '*/*'],
@@ -99,13 +85,5 @@ export async function importBackup(db: SQLiteDatabase): Promise<boolean> {
     }
   });
 
-  for (const [nome, b64] of Object.entries(data.fotos ?? {})) {
-    if (!/^[\w.-]+$/.test(nome)) continue;
-    try {
-      writePhotoFromBase64(nome, b64);
-    } catch {
-      // segue com as demais
-    }
-  }
   return true;
 }

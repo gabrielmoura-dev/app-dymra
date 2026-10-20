@@ -1,6 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Redirect, Tabs } from 'expo-router';
 import type { ColorValue } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useProfile } from '@/state/profile';
 import { colors } from '@/theme';
@@ -15,6 +16,8 @@ function icon(name: IconName, focusedName: IconName) {
 
 export default function TabsLayout() {
   const { profile, loading } = useProfile();
+  // Espaço da barra de navegação do Android (botões ou gestos), que fica por cima do app.
+  const insets = useSafeAreaInsets();
   if (loading) return null;
   if (!profile) return <Redirect href="/onboarding" />;
   return (
@@ -23,7 +26,7 @@ export default function TabsLayout() {
         headerShown: false,
         tabBarActiveTintColor: colors.accent,
         tabBarInactiveTintColor: colors.muted,
-        tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border, height: 64, paddingTop: 6 },
+        tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border, height: 64 + insets.bottom, paddingTop: 6, paddingBottom: insets.bottom },
         tabBarLabelStyle: { fontSize: 11, fontWeight: '600', paddingBottom: 4 },
         sceneStyle: { backgroundColor: colors.bg },
       }}>

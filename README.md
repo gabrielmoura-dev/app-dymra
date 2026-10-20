@@ -8,8 +8,10 @@ Feito com Expo SDK 58 (React Native 0.88), TypeScript e Expo Router.
 
 | Área | O que tem |
 |---|---|
+| **Cadastro** | Nome, corpo, peso, altura e objetivo; depois a ficha: gerada pelo app (dias por semana, tempo, prioridade), uma pronta, ou pular e montar a própria |
+| **Fichas** | Fichas próprias editáveis (dias, exercícios, séries, reps, descanso, ordem), gerar outra ficha, fichas prontas que chegam por atualização |
 | **Hoje** | Próximo treino da ficha (rodízio A → B → C), mapa dos músculos do dia, dicas de recuperação, água do dia, lembrete de backup |
-| **Treino** | Séries pré-preenchidas com a sugestão, ✓ por série, esforço Fácil/Ok/Difícil, timer de descanso com vibração e notificação, peso que "desce" para as próximas séries, nota por exercício, adicionar/remover exercício, tela sempre ligada |
+| **Treino** | Séries pré-preenchidas com a sugestão, ✓ por série, esforço Fácil/Ok/Difícil, séries de aquecimento sugeridas, timer de descanso com vibração e notificação, peso que "desce" para as próximas séries, nota por exercício, adicionar/remover exercício, tela sempre ligada |
 | **Máquina ocupada** | Mesmo exercício em outra máquina → alternativas escolhidas a dedo → mesmo movimento → mesmos músculos. Vale só para o treino do dia; séries já feitas continuam no exercício original |
 | **Técnica** | Checklist para iniciantes em cada exercício: ajuste da máquina, passo a passo, escápulas, abdômen/postura, respiração, velocidade, erros comuns, segurança |
 | **Vídeo** | YouTube tocando dentro do app (precisa de internet); se o vídeo bloquear, botão para abrir no YouTube |
@@ -21,29 +23,32 @@ Feito com Expo SDK 58 (React Native 0.88), TypeScript e Expo Router.
 | **QR code** | Cada máquina tem um QR (`dymra://maquina/<id>`). Lido pela câmera do celular ou pelo app, abre a ficha da máquina |
 | **Água** | Meta diária (35 ml/kg), botões +250/+500, lembretes a cada 2 h |
 | **Health Connect** | Grava treino, peso e água; lê calorias e frequência cardíaca do relógio |
-| **Backup** | Exporta tudo (incluindo fotos) num arquivo para salvar no Drive/WhatsApp e restaura em outro celular |
+| **Passo de carga** | Em cada máquina, de quanto em quanto o peso sobe (cadastrado no celular) |
+| **Backup** | Exporta treinos, medidas, água e fichas próprias (sem as fotos de progresso) num arquivo para salvar no Drive/WhatsApp e restaura em outro celular |
 
 ## Rodar no computador (desenvolvimento)
 
 ```bash
 npm install
-npm test            # testes da lógica (34)
+npm test            # testes da lógica (46)
 npm run typecheck
 npx expo start --web   # abre no navegador para testar telas (sem câmera/Health Connect)
 ```
 
 ## Gerar o APK e instalar nos celulares
 
-É preciso uma conta gratuita em [expo.dev](https://expo.dev) (crie você mesmo).
+É preciso uma conta gratuita em [expo.dev](https://expo.dev) (a mesma do Expo Go serve). Rode na pasta do projeto, um comando por vez:
 
 ```bash
-npx eas-cli@latest login
-npx eas-cli@latest init                 # liga o projeto à sua conta
+npx eas-cli@latest login                # pede o e-mail e a senha da conta Expo
+npx eas-cli@latest init                 # liga o projeto à sua conta (responda "Y")
 npx eas-cli@latest update:configure     # ativa as atualizações pelo ar
 npx eas-cli@latest build -p android --profile production
 ```
 
-No fim, o EAS mostra um link/QR. Abra no celular, baixe o APK e autorize "instalar apps desta fonte". Mande o mesmo link para a sua amiga.
+O `init` e o `update:configure` só são necessários na primeira vez (eles gravam o id do projeto no `app.json`; faça commit dessa mudança). O build roda na nuvem da Expo (fila gratuita, uns 10 a 30 minutos). No fim, o EAS mostra um link e um QR code: abra no celular, baixe o APK e autorize "instalar apps desta fonte". Mande o mesmo link para a Rita.
+
+O Expo Go **não** serve para usar o Dymra no dia a dia: ele não tem Health Connect, compartilhamento com o Claude nem as notificações do jeito que o app usa. Use o APK.
 
 ## Mandar atualizações (sem reinstalar)
 

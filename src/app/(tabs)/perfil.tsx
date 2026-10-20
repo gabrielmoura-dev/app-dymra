@@ -5,7 +5,7 @@ import * as Updates from 'expo-updates';
 import { useCallback, useState } from 'react';
 import { Alert, Switch, View } from 'react-native';
 
-import { CATALOG_VERSION, getProgram } from '@/catalog';
+import { CATALOG_VERSION } from '@/catalog';
 import type { Goal } from '@/catalog/types';
 import { formatInput, parseNumber, Stepper, TextField } from '@/components/inputs';
 import { Button, Card, Chip, Divider, Icon, Row, Screen, Txt } from '@/components/ui';
@@ -16,6 +16,7 @@ import { BackupError, exportBackup, importBackup } from '@/services/backup';
 import { connectHealth, healthStatus, openHealthSettings, type HealthStatus } from '@/services/health';
 import { syncReminders } from '@/services/notifications';
 import { useProfile, useRequiredProfile } from '@/state/profile';
+import { useProgram } from '@/state/userCatalog';
 import { colors, spacing } from '@/theme';
 
 const GOALS: Goal[] = ['hipertrofia', 'emagrecimento', 'condicionamento'];
@@ -139,7 +140,7 @@ export default function Perfil() {
     }
   };
 
-  const program = getProgram(profile.programaId);
+  const program = useProgram(profile.programaId);
 
   return (
     <Screen>
@@ -180,6 +181,16 @@ export default function Perfil() {
           suffix="s"
           decimals={false}
         />
+        <Linha label="Sugerir séries de aquecimento">
+          <Switch
+            value={profile.sugerirAquecimento}
+            onValueChange={(v) => update({ sugerirAquecimento: v })}
+            trackColor={{ true: colors.accent, false: colors.surface2 }}
+          />
+        </Linha>
+        <Txt variant="tiny">
+          No primeiro exercício pesado de pernas e no de tronco: 1×12 com metade da carga e, acima de 30 kg, mais 1×6 com 3/4.
+        </Txt>
       </Card>
 
       <Card>
@@ -259,7 +270,7 @@ export default function Perfil() {
           <Txt variant="h3">Backup</Txt>
         </Row>
         <Txt variant="small" color={colors.muted}>
-          Seus dados ficam só neste celular. Faça backup e salve no Google Drive ou mande para você no WhatsApp.
+          Seus dados ficam só neste celular. Faça backup e salve no Google Drive ou mande para você no WhatsApp. As fotos de progresso não entram no backup.
         </Txt>
         <Txt variant="tiny">
           Último backup: {profile.ultimoBackupEm ? formatDateLong(profile.ultimoBackupEm) : 'nunca'}

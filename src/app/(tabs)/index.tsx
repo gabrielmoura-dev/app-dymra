@@ -3,7 +3,7 @@ import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useState } from 'react';
 import { Alert, View } from 'react-native';
 
-import { getExercise, getProgram, MUSCLE_LABELS } from '@/catalog';
+import { getExercise, MUSCLE_LABELS } from '@/catalog';
 import type { Muscle, RoutineDay } from '@/catalog/types';
 import { MuscleMap } from '@/components/MuscleMap';
 import { Button, Card, Chip, Icon, Row, Screen, Stat, Txt } from '@/components/ui';
@@ -20,12 +20,13 @@ import { muscleInsights, muscleRecovery, sessionMuscleIntensity, weeklyVolume, t
 import { nextRoutineDay, sessionsThisWeek } from '@/logic/summary';
 import { startRoutineSession } from '@/state/planning';
 import { useRequiredProfile } from '@/state/profile';
+import { isCustomProgramId, useProgram } from '@/state/userCatalog';
 import { colors, spacing } from '@/theme';
 
 export default function Hoje() {
   const db = useSQLiteContext();
   const profile = useRequiredProfile();
-  const program = getProgram(profile.programaId);
+  const program = useProgram(profile.programaId);
 
   const [activeId, setActiveId] = useState<number | null>(null);
   const [lastSession, setLastSession] = useState<SessionRow | null>(null);
@@ -82,6 +83,7 @@ export default function Hoje() {
         day: d,
         nome: d ? d.nome : 'Treino livre',
         pesoCorporalKg: profile.pesoKg,
+        aquecimento: profile.sugerirAquecimento,
       });
       router.push('/sessao');
     } catch (e) {
@@ -131,15 +133,26 @@ export default function Hoje() {
           <Txt variant="label">Próximo treino · {program.nome}</Txt>
           <Txt variant="h2">{day.nome}</Txt>
           <Txt color={colors.muted}>
-            {day.foco} · {day.exercicios.length} exercícios
+            {day.foco ? `${day.foco} · ` : ''}
+            {day.exercicios.length ? `${day.exercicios.length} exercícios` : 'ainda sem exercícios'}
           </Txt>
-          <MuscleMap values={dayIntensity} mode="intensidade" height={180} />
-          <Button
-            title={activeId ? 'Continuar treino' : 'Começar treino'}
-            icon="play"
-            onPress={() => iniciar(day)}
-            loading={iniciando}
-          />
+          {day.exercicios.length > 0 ? (
+            <>
+              <MuscleMap values={dayIntensity} mode="intensidade" height={180} />
+              <Button
+                title={activeId ? 'Continuar treino' : 'Começar treino'}
+                icon="play"
+                onPress={() => iniciar(day)}
+                loading={iniciando}
+              />
+            </>
+          ) : (
+            <Button
+              title="Montar este treino"
+              icon="construct-outline"
+              onPress={() => router.push(isCustomProgramId(program.id) ? `/ficha/${program.id}` : '/treinos')}
+            />
+          )}
           <Row>
             <Button small variant="ghost" title="Outro treino" onPress={() => router.push('/treinos')} style={{ flex: 1 }} />
             <Button small variant="ghost" title="Treino livre" onPress={() => iniciar(null)} style={{ flex: 1 }} />

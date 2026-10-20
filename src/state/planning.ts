@@ -4,6 +4,9 @@ import { getExercise, loadStepFor } from '@/catalog';
 import type { Goal, RoutineDay, RoutineExercise } from '@/catalog/types';
 import { getExerciseHistory, startSession, type PlannedExercise } from '@/db/repo';
 import { GOAL_REP_RANGE, suggestNext, type Suggestion } from '@/logic/progression';
+import { warmupSetsFor, warmupTargets } from '@/logic/warmup';
+
+import { currentStepOverrides } from './userCatalog';
 
 export async function suggestionFor(
   db: SQLiteDatabase,
@@ -17,7 +20,7 @@ export async function suggestionFor(
     repsMin: r.repsMin,
     repsMax: r.repsMax,
     series: r.series,
-    passoKg: ex ? loadStepFor(ex) : 2.5,
+    passoKg: ex ? loadStepFor(ex, currentStepOverrides()) : 2.5,
     tipo: ex?.tipo ?? 'carga',
     assistido: ex?.assistido,
     duracaoAlvoSeg: r.duracaoSeg ?? null,
@@ -47,10 +50,18 @@ export function adHocRoutineExercise(exercicioId: string, objetivo: Goal, descan
 
 export async function startRoutineSession(
   db: SQLiteDatabase,
-  opts: { programaId: string | null; day: RoutineDay | null; nome: string; pesoCorporalKg: number },
+  opts: { programaId: string | null; day: RoutineDay | null; nome: string; pesoCorporalKg: number; aquecimento?: boolean },
 ): Promise<number> {
   const planned: PlannedExercise[] = [];
-  for (const r of opts.day?.exercicios ?? []) planned.push(await planExercise(db, r));
+  // Exercícios que saíram do catálogo (ex.: máquina retirada da academia) ficam de fora.
+  for (const r of opts.day?.exercicios ?? []) if (getExercise(r.exercicioId)) planned.push(await planExercise(db, r));
+  if (opts.aquecimento) {
+    const steps = currentStepOverrides();
+    for (const i of warmupTargets(planned.map((p) => getExercise(p.exercicioId)))) {
+      const ex = getExercise(planned[i].exercicioId);
+      if (ex) planned[i] = { ...planned[i], aquecimento: warmupSetsFor(planned[i].pesoSugeridoKg, loadStepFor(ex, steps)) };
+    }
+  }
   return startSession(db, {
     programaId: opts.programaId,
     diaId: opts.day?.id ?? null,

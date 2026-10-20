@@ -3,13 +3,14 @@ import { useSQLiteContext } from 'expo-sqlite';
 import { useState } from 'react';
 import { Alert, View } from 'react-native';
 
-import { getExercise, getMachine, getProgram, MUSCLE_LABELS } from '@/catalog';
+import { getExercise, getMachine, MUSCLE_LABELS } from '@/catalog';
 import { MuscleMap } from '@/components/MuscleMap';
 import { Button, Card, Empty, Icon, Row, Screen, Txt } from '@/components/ui';
 import { getActiveSessionId } from '@/db/repo';
 import { sessionMuscleIntensity } from '@/logic/recovery';
 import { startRoutineSession } from '@/state/planning';
 import { useRequiredProfile } from '@/state/profile';
+import { isCustomProgramId, useProgram } from '@/state/userCatalog';
 import { colors } from '@/theme';
 
 export default function RotinaDia() {
@@ -17,7 +18,7 @@ export default function RotinaDia() {
   const db = useSQLiteContext();
   const profile = useRequiredProfile();
   const [busy, setBusy] = useState(false);
-  const p = getProgram(programa);
+  const p = useProgram(programa);
   const d = p?.dias.find((x) => x.id === dia);
 
   if (!p || !d) return <Screen edges={['bottom']}><Empty icon="help" title="Treino não encontrado" /></Screen>;
@@ -31,7 +32,13 @@ export default function RotinaDia() {
         ]);
         return;
       }
-      await startRoutineSession(db, { programaId: p.id, day: d, nome: d.nome, pesoCorporalKg: profile.pesoKg });
+      await startRoutineSession(db, {
+        programaId: p.id,
+        day: d,
+        nome: d.nome,
+        pesoCorporalKg: profile.pesoKg,
+        aquecimento: profile.sugerirAquecimento,
+      });
       router.push('/sessao');
     } finally {
       setBusy(false);
@@ -48,10 +55,19 @@ export default function RotinaDia() {
       <Stack.Screen options={{ title: `${d.nome} · ${p.nome}` }} />
       <View style={{ gap: 2 }}>
         <Txt variant="h2">{d.nome}</Txt>
-        <Txt color={colors.muted}>{d.foco}</Txt>
+        {d.foco ? <Txt color={colors.muted}>{d.foco}</Txt> : null}
       </View>
-      <MuscleMap values={intensity} mode="intensidade" height={200} />
-      <Button title="Começar este treino" icon="play" onPress={iniciar} loading={busy} />
+      {d.exercicios.length > 0 ? (
+        <>
+          <MuscleMap values={intensity} mode="intensidade" height={200} />
+          <Button title="Começar este treino" icon="play" onPress={iniciar} loading={busy} />
+        </>
+      ) : (
+        <Empty icon="construct-outline" title="Treino sem exercícios" text="Adicione exercícios editando a ficha." />
+      )}
+      {isCustomProgramId(p.id) ? (
+        <Button small variant="secondary" icon="create-outline" title="Editar ficha" onPress={() => router.push(`/ficha/${p.id}`)} />
+      ) : null}
       {d.exercicios.map((r, i) => {
         const ex = getExercise(r.exercicioId);
         if (!ex) return null;

@@ -24,8 +24,15 @@ export function getMachine(id: string): Machine | undefined {
   return machineById.get(id);
 }
 
-export function getProgram(id: string | null | undefined): Program | undefined {
-  return id ? programById.get(id) : undefined;
+/** Procura primeiro nas fichas criadas no celular (`custom`), depois nas do catálogo. */
+export function getProgram(id: string | null | undefined, custom: Program[] = []): Program | undefined {
+  if (!id) return undefined;
+  return custom.find((p) => p.id === id) ?? programById.get(id);
+}
+
+/** Passo de carga da máquina, respeitando o que a pessoa cadastrou no celular. */
+export function machineStep(m: Machine, overrides: Record<string, number> = {}): number {
+  return overrides[m.id] ?? m.passoKg;
 }
 
 export function exercisesForMachine(machineId: string): Exercise[] {
@@ -33,9 +40,12 @@ export function exercisesForMachine(machineId: string): Exercise[] {
 }
 
 /** Passo de carga do exercício: o menor passo entre as máquinas onde ele é feito. */
-export function loadStepFor(ex: Exercise): number {
+export function loadStepFor(ex: Exercise, overrides: Record<string, number> = {}): number {
   const steps = ex.maquinaIds
-    .map((id) => machineById.get(id)?.passoKg ?? 0)
+    .map((id) => {
+      const m = machineById.get(id);
+      return m ? machineStep(m, overrides) : 0;
+    })
     .filter((s) => s > 0);
   return steps.length ? Math.min(...steps) : 2.5;
 }

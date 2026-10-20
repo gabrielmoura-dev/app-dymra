@@ -106,6 +106,24 @@ const MIGRATIONS: string[] = [
   CREATE INDEX IF NOT EXISTS idx_sets_se ON sets(session_exercise_id);
   CREATE INDEX IF NOT EXISTS idx_water_dia ON water_log(dia);
   `,
+  `
+  CREATE TABLE IF NOT EXISTS custom_programs (
+    id TEXT PRIMARY KEY,
+    nome TEXT NOT NULL,
+    dono TEXT NOT NULL DEFAULT '',
+    descricao TEXT NOT NULL DEFAULT '',
+    dias TEXT NOT NULL DEFAULT '[]',
+    criado_em TEXT NOT NULL,
+    atualizado_em TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS machine_steps (
+    maquina_id TEXT PRIMARY KEY,
+    passo_kg REAL NOT NULL
+  );
+
+  ALTER TABLE profile ADD COLUMN sugerir_aquecimento INTEGER NOT NULL DEFAULT 1;
+  `,
 ];
 
 export const DATABASE_VERSION = MIGRATIONS.length;
@@ -124,7 +142,10 @@ export async function migrateDbIfNeeded(db: SQLiteDatabase) {
   }
 }
 
-/** Tabelas incluídas no backup, na ordem segura para restaurar. */
+/**
+ * Tabelas incluídas no backup, na ordem segura para restaurar.
+ * As fotos de progresso ficam de fora (decisão de vocês): continuam só no celular.
+ */
 export const BACKUP_TABLES = [
   'profile',
   'sessions',
@@ -132,6 +153,7 @@ export const BACKUP_TABLES = [
   'sets',
   'exercise_notes',
   'body_measures',
-  'progress_photos',
   'water_log',
+  'custom_programs',
+  'machine_steps',
 ] as const;
