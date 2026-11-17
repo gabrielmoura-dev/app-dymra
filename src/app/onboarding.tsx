@@ -19,7 +19,7 @@ import { colors, spacing } from '@/theme';
 
 const GOALS: Goal[] = ['hipertrofia', 'emagrecimento', 'condicionamento'];
 /** Atalhos para quem vai usar o app. */
-const NOMES = ['Gabriel', 'Rita'];
+const NOMES = ['Gabriel', 'Rita', 'Val'];
 
 type Modo = 'gerar' | 'pronta' | 'pular';
 

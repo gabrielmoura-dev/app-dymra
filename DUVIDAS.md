@@ -5,7 +5,7 @@
 | # | Pergunta | Resposta | O que mudou no app |
 |---|---|---|---|
 | 1 | Conta Expo | Criada (a mesma do Expo Go) | Falta rodar os comandos do README para gerar o APK |
-| 2 | Nomes | Gabriel e Rita | O cadastro oferece "Gabriel" e "Rita" com um toque; a ficha gerada se chama "Ficha de …" |
+| 2 | Nomes | Gabriel, Rita e Val (Valentina) | O cadastro oferece "Gabriel", "Rita" e "Val" com um toque; a ficha gerada se chama "Ficha de …" |
 | 3 | Fichas | Onboarding para definir os treinos, com opção de pular e montar o próprio | Cadastro em 2 etapas. Na segunda: **Montar uma ficha para mim** (dias por semana, tempo e prioridade → o app monta com as máquinas do catálogo), **Usar uma ficha pronta** ou **Pular e montar o meu** (abre o editor com uma ficha vazia). Em Fichas dá para gerar outra, montar do zero e editar (séries, reps, descanso, ordem, dias) |
 | 4 | Passo de carga | Um campo para cadastrar a evolução dos pesos | Na tela de cada máquina há o campo **Passo de carga** (de quanto em quanto o peso sobe). Vale para os botões − / + e para as sugestões. Entendi "evolução dos pesos" como esse passo; se era outra coisa, me diga |
 | 5 | Catálogo de exemplo | Manter as máquinas que existem na academia e remover as outras | Feito quando você mandar a lista/fotos |
