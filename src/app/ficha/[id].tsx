@@ -1,5 +1,6 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
+import { useEffect } from 'react';
 import { View } from 'react-native';
 
 import { getExercise, getMachine } from '@/catalog';
@@ -9,7 +10,7 @@ import { Stepper, TextField } from '@/components/inputs';
 import { Button, Card, Chip, Empty, IconButton, Row, Screen, Txt } from '@/components/ui';
 import { nextDayId } from '@/logic/programGenerator';
 import { useProfile, useRequiredProfile } from '@/state/profile';
-import { removeCustomProgram, saveCustomProgram, useUserCatalog } from '@/state/userCatalog';
+import { flushPendingSaves, removeCustomProgram, saveCustomProgramDebounced, useUserCatalog } from '@/state/userCatalog';
 import { colors, spacing } from '@/theme';
 
 function ExercicioDaFicha({
@@ -119,6 +120,9 @@ export default function EditarFicha() {
   const { update } = useProfile();
   const program = useUserCatalog((s) => s.programs.find((p) => p.id === id));
 
+  // Ao sair do editor, grava o que ainda estiver esperando.
+  useEffect(() => () => void flushPendingSaves().catch(() => {}), []);
+
   if (!program) {
     return (
       <Screen edges={['bottom']}>
@@ -127,7 +131,7 @@ export default function EditarFicha() {
     );
   }
 
-  const salvar = (p: Program) => saveCustomProgram(db, p);
+  const salvar = (p: Program) => saveCustomProgramDebounced(db, p);
   const salvarDia = (dia: RoutineDay) => salvar({ ...program, dias: program.dias.map((d) => (d.id === dia.id ? dia : d)) });
 
   const moverExercicio = (dia: RoutineDay, i: number, dir: -1 | 1) => {

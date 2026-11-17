@@ -124,12 +124,19 @@ const MIGRATIONS: string[] = [
 
   ALTER TABLE profile ADD COLUMN sugerir_aquecimento INTEGER NOT NULL DEFAULT 1;
   `,
+  // Índices para as consultas mais usadas: treino aberto, histórico por data e séries recentes.
+  `
+  CREATE INDEX IF NOT EXISTS idx_sessions_status_data ON sessions(status, iniciado_em);
+  CREATE INDEX IF NOT EXISTS idx_sets_concluida_em ON sets(concluida_em) WHERE concluida = 1;
+  CREATE INDEX IF NOT EXISTS idx_measures_data ON body_measures(data);
+  `,
 ];
 
 export const DATABASE_VERSION = MIGRATIONS.length;
 
 export async function migrateDbIfNeeded(db: SQLiteDatabase) {
-  await db.execAsync('PRAGMA foreign_keys = ON;');
+  // Com WAL, "NORMAL" continua seguro contra corrupção e evita um fsync a cada gravação.
+  await db.execAsync('PRAGMA foreign_keys = ON; PRAGMA synchronous = NORMAL;');
   const row = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
   let current = row?.user_version ?? 0;
   if (current === 0) {

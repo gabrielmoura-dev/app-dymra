@@ -2,9 +2,11 @@ import { Image } from 'expo-image';
 import { router, useFocusEffect } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useState } from 'react';
-import { Alert, Pressable, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import { getExercise, MUSCLE_LABELS } from '@/catalog';
+import { ActionSheet } from '@/components/ActionSheet';
+import { confirmAction, notify } from '@/components/confirm';
 import { formatInput, parseNumber, TextField } from '@/components/inputs';
 import { LineChart } from '@/components/LineChart';
 import { Button, Card, Chip, Empty, Icon, Row, Screen, Txt } from '@/components/ui';
@@ -58,10 +60,12 @@ export default function Corpo() {
   const [chartKey, setChartKey] = useState<MeasureKey>('pesoKg');
   const [pose, setPose] = useState<PhotoPose>('frente');
   const [comparar, setComparar] = useState(false);
+  const [fotoMenu, setFotoMenu] = useState<ProgressPhoto | null>(null);
 
   const load = useCallback(async () => {
-    setMeasures(await listBodyMeasures(db));
-    setPhotos(await listProgressPhotos(db));
+    const [m, p] = await Promise.all([listBodyMeasures(db), listProgressPhotos(db)]);
+    setMeasures(m);
+    setPhotos(p);
   }, [db]);
   useFocusEffect(
     useCallback(() => {
@@ -98,8 +102,10 @@ export default function Corpo() {
   const fotosPose = photos.filter((p) => p.pose === pose);
 
   const analisar = async (foto: ProgressPhoto) => {
-    const sets = await getCompletedSetsSince(db, daysAgo(7).toISOString());
-    const sessoes = await listSessionDates(db, daysAgo(30).toISOString());
+    const [sets, sessoes] = await Promise.all([
+      getCompletedSetsSince(db, daysAgo(7).toISOString()),
+      listSessionDates(db, daysAgo(30).toISOString()),
+    ]);
     const last = [...measures].reverse().find((m) => m.cinturaCm || m.quadrilCm);
     const prompt = buildClaudePrompt({
       nome: profile.nome,
@@ -115,7 +121,7 @@ export default function Corpo() {
       temFotoAnterior: photos.filter((p) => p.pose === foto.pose).length > 1,
     });
     const r = await shareToClaude(photoUri(foto.arquivo), prompt);
-    Alert.alert(
+    notify(
       'Analisar no Claude',
       r === 'compartilhado'
         ? 'Escolha o app do Claude na lista. O texto também foi copiado: se ele não aparecer junto com a foto, é só colar na conversa.'
@@ -123,20 +129,13 @@ export default function Corpo() {
     );
   };
 
-  const acoesFoto = (foto: ProgressPhoto) =>
-    Alert.alert(`Foto de ${formatDateShort(foto.data)}`, undefined, [
-      { text: 'Analisar no Claude', onPress: () => analisar(foto) },
-      {
-        text: 'Apagar foto',
-        style: 'destructive',
-        onPress: async () => {
-          await deleteProgressPhoto(db, foto.id);
-          deletePhotoFile(foto.arquivo);
-          load();
-        },
-      },
-      { text: 'Cancelar', style: 'cancel' },
-    ]);
+  const apagarFoto = async (foto: ProgressPhoto) => {
+    const ok = await confirmAction({ title: 'Apagar esta foto?', message: 'Não dá para desfazer.', confirmText: 'Apagar', destructive: true });
+    if (!ok) return;
+    await deleteProgressPhoto(db, foto.id);
+    deletePhotoFile(foto.arquivo);
+    load();
+  };
 
   const daGaleria = async () => {
     const nome = await pickPhotoFromGallery();
@@ -153,6 +152,19 @@ export default function Corpo() {
 
   return (
     <Screen edges={['bottom']}>
+      <ActionSheet
+        visible={fotoMenu != null}
+        title={fotoMenu ? `Foto de ${formatDateShort(fotoMenu.data)}` : undefined}
+        onClose={() => setFotoMenu(null)}
+        options={
+          fotoMenu
+            ? [
+                { label: 'Analisar no Claude', icon: 'sparkles', onPress: () => analisar(fotoMenu) },
+                { label: 'Apagar foto', icon: 'trash-outline', destructive: true, onPress: () => apagarFoto(fotoMenu) },
+              ]
+            : []
+        }
+      />
       <Card>
         <Row style={{ justifyContent: 'space-between' }}>
           <Txt variant="h3">Medidas</Txt>
@@ -194,19 +206,11 @@ export default function Corpo() {
           .map((m) => (
             <Pressable
               key={m.id}
-              onLongPress={() =>
-                Alert.alert('Apagar registro?', undefined, [
-                  { text: 'Cancelar', style: 'cancel' },
-                  {
-                    text: 'Apagar',
-                    style: 'destructive',
-                    onPress: async () => {
-                      await deleteBodyMeasure(db, m.id);
-                      load();
-                    },
-                  },
-                ])
-              }>
+              onLongPress={async () => {
+                if (!(await confirmAction({ title: 'Apagar registro?', confirmText: 'Apagar', destructive: true }))) return;
+                await deleteBodyMeasure(db, m.id);
+                load();
+              }}>
               <Row style={{ justifyContent: 'space-between' }}>
                 <Txt variant="small" color={colors.muted}>
                   {formatDateShort(m.data)}
@@ -264,7 +268,7 @@ export default function Corpo() {
         ) : (
           <Row wrap gap={spacing.sm}>
             {fotosPose.map((f) => (
-              <Pressable key={f.id} onPress={() => acoesFoto(f)} style={{ width: '31%' }}>
+              <Pressable key={f.id} onPress={() => setFotoMenu(f)} style={{ width: '31%' }}>
                 <Image source={{ uri: photoUri(f.arquivo) }} style={{ width: '100%', aspectRatio: 3 / 4, borderRadius: radius.sm }} />
                 <Txt variant="tiny" center>
                   {formatDateShort(f.data)}

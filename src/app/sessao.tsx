@@ -16,7 +16,7 @@ import {
   deleteSession,
   finishSession,
   getActiveSessionId,
-  getExerciseNote,
+  getExerciseNotes,
   getSessionDetail,
   removeSet,
   removeSessionExercise,
@@ -29,6 +29,7 @@ import {
 import { sessionMet, estimateKcal } from '@/logic/calories';
 import { formatClock } from '@/logic/dates';
 import type { Suggestion } from '@/logic/progression';
+import { effectiveEndMs } from '@/logic/summary';
 import type { Effort } from '@/logic/types';
 import { readWorkoutStats, writeWorkout } from '@/services/health';
 import { suggestionFor } from '@/state/planning';
@@ -90,27 +91,35 @@ export default function Sessao() {
     setDetail(d);
     setLoaded(true);
     if (d) {
-      const sug: Record<number, Suggestion | null> = {};
-      const nts: Record<string, string> = {};
-      for (const { item, sets } of d.exercises) {
-        sug[item.id] = await suggestionFor(
-          db,
-          {
-            exercicioId: item.exercicio_id,
-            series: sets.filter((s) => s.aquecimento === 0).length,
-            repsMin: item.reps_min,
-            repsMax: item.reps_max,
-            descansoSeg: item.descanso_seg,
-            duracaoSeg: item.duracao_seg ?? undefined,
-          },
-          id,
-        );
-        nts[item.exercicio_id] = await getExerciseNote(db, item.exercicio_id);
-      }
-      setSuggestions(sug);
+      // Sugestões e notas de todos os exercícios em paralelo, sem esperar um por um.
+      const [sugs, nts] = await Promise.all([
+        Promise.all(
+          d.exercises.map(({ item, sets }) =>
+            suggestionFor(
+              db,
+              {
+                exercicioId: item.exercicio_id,
+                series: sets.filter((s) => s.aquecimento === 0).length,
+                repsMin: item.reps_min,
+                repsMax: item.reps_max,
+                descansoSeg: item.descanso_seg,
+                duracaoSeg: item.duracao_seg ?? undefined,
+              },
+              id,
+            ),
+          ),
+        ),
+        getExerciseNotes(db, [...new Set(d.exercises.map((e) => e.item.exercicio_id))]),
+      ]);
+      setSuggestions(Object.fromEntries(d.exercises.map((e, i) => [e.item.id, sugs[i]])));
       setNotes(nts);
     }
   }, [db]);
+
+  /** Recarrega só as séries (adicionar/remover série não muda sugestões nem notas). */
+  const reloadSets = async () => {
+    if (sessionId) setDetail(await getSessionDetail(db, sessionId));
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -217,8 +226,12 @@ export default function Sessao() {
     try {
       await stopRest();
       const inicio = detail.session.iniciado_em;
-      const fim = new Date().toISOString();
-      const duracaoSeg = Math.round((Date.now() - new Date(inicio).getTime()) / 1000);
+      const ultimaSerie = detail.exercises
+        .flatMap((e) => e.sets)
+        .reduce<string | null>((max, s) => (s.concluida_em && (!max || s.concluida_em > max) ? s.concluida_em : max), null);
+      const fimMs = effectiveEndMs(inicio, ultimaSerie, Date.now());
+      const fim = new Date(fimMs).toISOString();
+      const duracaoSeg = Math.round((fimMs - new Date(inicio).getTime()) / 1000);
       let kcal: number | null = null;
       let fonte: 'relogio' | 'estimativa' | null = null;
       let fcMedia: number | null = null;
@@ -291,14 +304,16 @@ export default function Sessao() {
         }}
       />
       <RestTimerBar />
-      <ScrollView contentContainerStyle={{ padding: spacing.lg, gap: spacing.lg, paddingBottom: 120 }} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={{ padding: spacing.lg, gap: spacing.xl, paddingBottom: 120 }} keyboardShouldPersistTaps="handled">
         <Txt variant="small" color={colors.muted}>
           {feitas} de {total} séries feitas · toque no ✓ ao terminar cada série
         </Txt>
-        {detail.exercises.map(({ item, sets }) => (
+        {detail.exercises.map(({ item, sets }, i) => (
           <SessionExerciseCard
             key={item.id}
             item={item}
+            numero={i + 1}
+            total={detail.exercises.length}
             sets={sets}
             suggestion={suggestions[item.id] ?? null}
             note={notes[item.exercicio_id] ?? ''}
@@ -306,15 +321,25 @@ export default function Sessao() {
             onToggleSet={(s, done) => onToggleSet(item.id, item.descanso_seg, s, done)}
             onAddSet={async () => {
               await addSet(db, item.id);
-              reload();
+              reloadSets();
             }}
             onRemoveSet={async (id) => {
               await removeSet(db, id);
-              reload();
+              reloadSets();
             }}
             onRemoveExercise={async () => {
+              // Só pergunta quando há séries feitas a perder.
+              if (sets.some((s) => s.concluida === 1)) {
+                const ok = await confirmAction({
+                  title: 'Tirar do treino?',
+                  message: 'As séries já marcadas neste exercício serão apagadas.',
+                  confirmText: 'Tirar',
+                  destructive: true,
+                });
+                if (!ok) return;
+              }
               await removeSessionExercise(db, item.id);
-              reload();
+              reloadSets();
             }}
             onSaveNote={async (nota) => {
               await setExerciseNote(db, item.exercicio_id, nota);

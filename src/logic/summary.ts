@@ -87,3 +87,17 @@ export function sessionsThisWeek(dates: string[], now: Date = new Date()): numbe
   start.setDate(start.getDate() - day);
   return dates.filter((d) => new Date(d) >= start).length;
 }
+
+const TREINO_ESQUECIDO_MS = 3 * 60 * 60 * 1000;
+const FOLGA_APOS_ULTIMA_SERIE_MS = 5 * 60 * 1000;
+
+/**
+ * Momento em que o treino realmente terminou. Se ele ficou aberto por mais de 3 h
+ * (esqueceu de finalizar), conta até 5 min depois da última série, para não inflar
+ * a duração e as calorias.
+ */
+export function effectiveEndMs(inicioIso: string, ultimaSerieIso: string | null, agoraMs: number): number {
+  const inicio = new Date(inicioIso).getTime();
+  if (agoraMs - inicio <= TREINO_ESQUECIDO_MS || !ultimaSerieIso) return agoraMs;
+  return Math.min(agoraMs, Math.max(inicio, new Date(ultimaSerieIso).getTime() + FOLGA_APOS_ULTIMA_SERIE_MS));
+}

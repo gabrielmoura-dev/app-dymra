@@ -10,6 +10,28 @@ import { findAlternatives, type Alternative } from '@/logic/alternatives';
 import { suggestionFor } from '@/state/planning';
 import { colors } from '@/theme';
 
+function Item({ a, onPress }: { a: Alternative; onPress: () => void }) {
+  return (
+    <Card onPress={onPress}>
+        <Row style={{ justifyContent: 'space-between' }}>
+          <View style={{ flex: 1, gap: 2 }}>
+            <Txt variant="h3">{a.exercise.nome}</Txt>
+            <Txt variant="small" color={colors.muted}>
+              {getMachine(a.machineId)?.nome}
+            </Txt>
+          </View>
+          <Icon name="swap-horizontal" color={colors.accent} />
+        </Row>
+        <Row wrap gap={6}>
+          <Txt variant="tiny" color={colors.accent}>
+            {a.motivo}
+          </Txt>
+          <Txt variant="tiny">· {a.exercise.primarios.map((m) => MUSCLE_LABELS[m]).join(', ')}</Txt>
+        </Row>
+      </Card>
+    );
+}
+
 export default function Trocar() {
   const { seId } = useLocalSearchParams<{ seId: string }>();
   const db = useSQLiteContext();
@@ -42,26 +64,6 @@ export default function Trocar() {
     router.back();
   };
 
-  const Item = ({ a }: { a: Alternative }) => (
-    <Card onPress={() => escolher(a.exercise.id)}>
-      <Row style={{ justifyContent: 'space-between' }}>
-        <View style={{ flex: 1, gap: 2 }}>
-          <Txt variant="h3">{a.exercise.nome}</Txt>
-          <Txt variant="small" color={colors.muted}>
-            {getMachine(a.machineId)?.nome}
-          </Txt>
-        </View>
-        <Icon name="swap-horizontal" color={colors.accent} />
-      </Row>
-      <Row wrap gap={6}>
-        <Txt variant="tiny" color={colors.accent}>
-          {a.motivo}
-        </Txt>
-        <Txt variant="tiny">· {a.exercise.primarios.map((m) => MUSCLE_LABELS[m]).join(', ')}</Txt>
-      </Row>
-    </Card>
-  );
-
   return (
     <Screen edges={['bottom']}>
       <Txt color={colors.muted}>
@@ -82,7 +84,7 @@ export default function Trocar() {
       {alts.length === 0 ? (
         <Empty icon="sad-outline" title="Sem alternativas cadastradas" text="Espere a máquina liberar ou pule este exercício." />
       ) : (
-        alts.map((a) => <Item key={`${a.exercise.id}-${a.machineId}`} a={a} />)
+        alts.map((a) => <Item key={`${a.exercise.id}-${a.machineId}`} a={a} onPress={() => escolher(a.exercise.id)} />)
       )}
     </Screen>
   );

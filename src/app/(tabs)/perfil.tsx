@@ -7,6 +7,7 @@ import { Alert, Switch, View } from 'react-native';
 
 import { CATALOG_VERSION } from '@/catalog';
 import type { Goal } from '@/catalog/types';
+import { confirmAction, notify } from '@/components/confirm';
 import { formatInput, parseNumber, Stepper, TextField } from '@/components/inputs';
 import { Button, Card, Chip, Divider, Icon, Row, Screen, Txt } from '@/components/ui';
 import { suggestedWaterGoal } from '@/logic/calories';
@@ -49,7 +50,7 @@ export default function Perfil() {
   const salvarDados = async () => {
     const a = parseNumber(altura);
     await update({ nome: nome.trim() || profile.nome, alturaCm: a && a > 100 && a < 230 ? a : profile.alturaCm });
-    Alert.alert('Pronto', 'Dados atualizados.');
+    notify('Pronto', 'Dados atualizados.');
   };
 
   const setLembretes = async (patch: { lembreteAgua?: boolean; lembreteTreinoDias?: number[]; lembreteTreinoHora?: number }) => {
@@ -60,7 +61,7 @@ export default function Perfil() {
     };
     const ok = await syncReminders(next);
     if (!ok && (next.agua || next.treinoDias.length > 0)) {
-      Alert.alert('Notificações bloqueadas', 'Libere as notificações do Dymra nas configurações do Android.');
+      notify('Notificações bloqueadas', 'Libere as notificações do Dymra nas configurações do Android.');
       return;
     }
     await update(patch);
@@ -72,7 +73,7 @@ export default function Perfil() {
       return;
     }
     if (hc !== 'disponivel') {
-      Alert.alert(
+      notify(
         'Health Connect indisponível',
         hc === 'precisa-atualizar'
           ? 'Atualize o app Health Connect pela Play Store e tente de novo.'
@@ -91,50 +92,49 @@ export default function Perfil() {
       await exportBackup(db);
       await refresh();
     } catch (e) {
-      Alert.alert('Erro no backup', String(e));
+      notify('Erro no backup', String(e));
     } finally {
       setBusy(null);
     }
   };
 
-  const restaurar = () =>
-    Alert.alert('Restaurar backup?', 'Isso SUBSTITUI todos os dados atuais deste celular pelos do arquivo.', [
-      { text: 'Cancelar', style: 'cancel' },
-      {
-        text: 'Escolher arquivo',
-        style: 'destructive',
-        onPress: async () => {
-          setBusy('restore');
-          try {
-            if (await importBackup(db)) {
-              await refresh();
-              Alert.alert('Backup restaurado', 'Seus dados voltaram!');
-            }
-          } catch (e) {
-            Alert.alert('Não deu para restaurar', e instanceof BackupError ? e.message : String(e));
-          } finally {
-            setBusy(null);
-          }
-        },
-      },
-    ]);
+  const restaurar = async () => {
+    const ok = await confirmAction({
+      title: 'Restaurar backup?',
+      message: 'Isso SUBSTITUI todos os dados atuais deste celular pelos do arquivo.',
+      confirmText: 'Escolher arquivo',
+      destructive: true,
+    });
+    if (!ok) return;
+    setBusy('restore');
+    try {
+      if (await importBackup(db)) {
+        await refresh();
+        notify('Backup restaurado', 'Seus dados voltaram!');
+      }
+    } catch (e) {
+      notify('Não deu para restaurar', e instanceof BackupError ? e.message : String(e));
+    } finally {
+      setBusy(null);
+    }
+  };
 
   const buscarAtualizacao = async () => {
     if (!Updates.isEnabled) {
-      Alert.alert('Atualizações', 'Disponível só no app instalado (APK).');
+      notify('Atualizações', 'Disponível só no app instalado (APK).');
       return;
     }
     setBusy('update');
     try {
       const r = await Updates.checkForUpdateAsync();
       if (!r.isAvailable) {
-        Alert.alert('Tudo em dia', 'Você já está com a versão mais recente.');
+        notify('Tudo em dia', 'Você já está com a versão mais recente.');
         return;
       }
       await Updates.fetchUpdateAsync();
       Alert.alert('Atualização baixada', 'O app vai reiniciar para aplicar.', [{ text: 'Reiniciar', onPress: () => Updates.reloadAsync() }]);
     } catch (e) {
-      Alert.alert('Não deu para atualizar', String(e));
+      notify('Não deu para atualizar', String(e));
     } finally {
       setBusy(null);
     }

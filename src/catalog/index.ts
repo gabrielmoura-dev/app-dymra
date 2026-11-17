@@ -35,8 +35,17 @@ export function machineStep(m: Machine, overrides: Record<string, number> = {}):
   return overrides[m.id] ?? m.passoKg;
 }
 
+const exercisesByMachine = new Map<string, Exercise[]>();
+for (const e of EXERCISES) {
+  for (const m of e.maquinaIds) {
+    const list = exercisesByMachine.get(m);
+    if (list) list.push(e);
+    else exercisesByMachine.set(m, [e]);
+  }
+}
+
 export function exercisesForMachine(machineId: string): Exercise[] {
-  return EXERCISES.filter((e) => e.maquinaIds.includes(machineId));
+  return exercisesByMachine.get(machineId) ?? [];
 }
 
 /** Passo de carga do exercício: o menor passo entre as máquinas onde ele é feito. */

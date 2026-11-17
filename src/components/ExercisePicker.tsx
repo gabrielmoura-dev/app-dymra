@@ -22,15 +22,22 @@ function normalize(s: string) {
   return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 }
 
+/** Texto pesquisável de cada exercício (nome, músculos, máquinas), montado uma vez só. */
+const SEARCH_INDEX = new Map(
+  EXERCISES.map((e) => [
+    e.id,
+    normalize(
+      [e.nome, ...e.primarios.map((m) => MUSCLE_LABELS[m]), ...e.maquinaIds.map((m) => getMachine(m)?.nome ?? '')].join(' '),
+    ),
+  ]),
+);
+
 export function filterExercises(query: string, filter: Muscle[] | null): Exercise[] {
-  const q = normalize(query.trim());
+  const words = normalize(query.trim()).split(/\s+/).filter(Boolean);
   return EXERCISES.filter((e) => {
     if (filter && !e.primarios.some((m) => filter.includes(m)) && !(filter.length === 0 && e.padrao === 'cardio')) return false;
-    if (!q) return true;
-    const hay = normalize(
-      [e.nome, ...e.primarios.map((m) => MUSCLE_LABELS[m]), ...e.maquinaIds.map((m) => getMachine(m)?.nome ?? '')].join(' '),
-    );
-    return q.split(/\s+/).every((w) => hay.includes(w));
+    const hay = SEARCH_INDEX.get(e.id) ?? '';
+    return words.every((w) => hay.includes(w));
   });
 }
 

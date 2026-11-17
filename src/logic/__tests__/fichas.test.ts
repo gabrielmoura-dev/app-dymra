@@ -1,6 +1,7 @@
-import { EXERCISES, getExercise, loadStepFor } from '@/catalog';
+import { EXERCISES, exercisesForMachine, getExercise, loadStepFor } from '@/catalog';
 import type { Exercise } from '@/catalog/types';
 import { emptyProgram, generateProgram, nextDayId, type DiasPorSemana } from '@/logic/programGenerator';
+import { effectiveEndMs } from '@/logic/summary';
 import { warmupSetsFor, warmupTargets } from '@/logic/warmup';
 
 describe('gerador de ficha', () => {
@@ -69,5 +70,28 @@ describe('aquecimento', () => {
     const ex = getExercise('leg-press-45')!;
     expect(loadStepFor(ex)).toBe(5);
     expect(loadStepFor(ex, { 'leg-press-45': 10 })).toBe(10);
+  });
+});
+
+describe('fim do treino', () => {
+  const inicio = '2026-10-20T18:00:00.000Z';
+  const t = (iso: string) => new Date(iso).getTime();
+  it('treino normal termina agora', () => {
+    expect(effectiveEndMs(inicio, '2026-10-20T18:50:00.000Z', t('2026-10-20T19:00:00.000Z'))).toBe(t('2026-10-20T19:00:00.000Z'));
+  });
+  it('treino esquecido aberto conta até 5 min depois da última série', () => {
+    expect(effectiveEndMs(inicio, '2026-10-20T19:10:00.000Z', t('2026-10-21T08:00:00.000Z'))).toBe(t('2026-10-20T19:15:00.000Z'));
+  });
+  it('sem série marcada não há o que cortar', () => {
+    expect(effectiveEndMs(inicio, null, t('2026-10-21T08:00:00.000Z'))).toBe(t('2026-10-21T08:00:00.000Z'));
+  });
+});
+
+describe('catálogo', () => {
+  it('índice de exercícios por máquina bate com a lista', () => {
+    expect(exercisesForMachine('crossover').map((e) => e.id)).toEqual(
+      EXERCISES.filter((e) => e.maquinaIds.includes('crossover')).map((e) => e.id),
+    );
+    expect(exercisesForMachine('nao-existe')).toEqual([]);
   });
 });

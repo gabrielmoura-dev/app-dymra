@@ -1,10 +1,11 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useState } from 'react';
-import { Alert, View } from 'react-native';
+import { View } from 'react-native';
 
 import { getExercise, MUSCLE_LABELS } from '@/catalog';
 import type { Muscle, RoutineDay } from '@/catalog/types';
+import { notify } from '@/components/confirm';
 import { MuscleMap } from '@/components/MuscleMap';
 import { Button, Card, Chip, Icon, Row, Screen, Stat, Txt } from '@/components/ui';
 import { WaterCard } from '@/components/WaterCard';
@@ -87,7 +88,7 @@ export default function Hoje() {
       });
       router.push('/sessao');
     } catch (e) {
-      Alert.alert('Não deu para iniciar', String(e));
+      notify('Não deu para iniciar', String(e));
     } finally {
       setIniciando(false);
     }

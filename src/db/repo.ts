@@ -573,13 +573,30 @@ export async function getCompletedSetsSince(db: SQLiteDatabase, sinceIso: string
   return rows.map((r) => ({ exercicioId: r.exercicio_id, concluidaEm: r.concluida_em, aquecimento: r.aquecimento === 1 }));
 }
 
-/** Exercícios que já têm histórico (para a lista de recordes). */
-export async function listTrainedExerciseIds(db: SQLiteDatabase): Promise<string[]> {
-  const rows = await db.getAllAsync<{ exercicio_id: string }>(
-    `SELECT DISTINCT se.exercicio_id FROM session_exercises se JOIN sessions s ON s.id = se.session_id
-     WHERE s.status = 'concluida'`,
+/** Histórico de todos os exercícios numa consulta só (para a lista de recordes). */
+export async function getAllExerciseHistory(db: SQLiteDatabase): Promise<Map<string, ExerciseHistoryEntry[]>> {
+  const rows = await db.getAllAsync<SetRow & { exercicio_id: string; sid: number; data: string }>(
+    `SELECT st.*, se.exercicio_id, s.id AS sid, s.iniciado_em AS data FROM sets st
+     JOIN session_exercises se ON se.id = st.session_exercise_id
+     JOIN sessions s ON s.id = se.session_id
+     WHERE s.status = 'concluida' AND st.concluida = 1
+     ORDER BY s.iniciado_em DESC, st.ordem`,
   );
-  return rows.map((r) => r.exercicio_id);
+  const out = new Map<string, ExerciseHistoryEntry[]>();
+  const bySession = new Map<string, ExerciseHistoryEntry>();
+  for (const r of rows) {
+    const key = `${r.exercicio_id}|${r.sid}`;
+    let e = bySession.get(key);
+    if (!e) {
+      e = { sessionId: r.sid, data: r.data, sets: [] };
+      bySession.set(key, e);
+      const list = out.get(r.exercicio_id);
+      if (list) list.push(e);
+      else out.set(r.exercicio_id, [e]);
+    }
+    e.sets.push(toLoggedSet(r));
+  }
+  return out;
 }
 
 export async function listSessionDates(db: SQLiteDatabase, sinceIso: string): Promise<string[]> {
@@ -598,6 +615,16 @@ export async function getExerciseNote(db: SQLiteDatabase, exercicioId: string): 
     exercicioId,
   );
   return r?.nota ?? '';
+}
+
+/** Notas de vários exercícios numa consulta só. */
+export async function getExerciseNotes(db: SQLiteDatabase, exercicioIds: string[]): Promise<Record<string, string>> {
+  if (exercicioIds.length === 0) return {};
+  const rows = await db.getAllAsync<{ exercicio_id: string; nota: string }>(
+    `SELECT exercicio_id, nota FROM exercise_notes WHERE exercicio_id IN (${exercicioIds.map(() => '?').join(', ')})`,
+    ...exercicioIds,
+  );
+  return Object.fromEntries(rows.map((r) => [r.exercicio_id, r.nota]));
 }
 
 export async function setExerciseNote(db: SQLiteDatabase, exercicioId: string, nota: string) {
@@ -694,6 +721,11 @@ export async function addProgressPhoto(db: SQLiteDatabase, arquivo: string, pose
     arquivo,
     pose,
   );
+}
+
+/** Foto mais recente de uma pose (guia da câmera). */
+export async function getLastProgressPhoto(db: SQLiteDatabase, pose: PhotoPose): Promise<ProgressPhoto | null> {
+  return db.getFirstAsync<ProgressPhoto>('SELECT * FROM progress_photos WHERE pose = ? ORDER BY data DESC LIMIT 1', pose);
 }
 
 export async function listProgressPhotos(db: SQLiteDatabase): Promise<ProgressPhoto[]> {

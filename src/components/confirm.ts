@@ -33,5 +33,5 @@ export function notify(title: string, message?: string) {
     window.alert([title, message].filter(Boolean).join('\n\n'));
     return;
   }
-  Alert.alert(title, message);
+  Alert.alert(title, message, undefined, { cancelable: true });
 }

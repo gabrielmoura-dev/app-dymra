@@ -41,17 +41,18 @@ export default function Resumo() {
       if (!d) return;
       const records: ExtraInfo['records'] = [];
       const comparisons: ExerciseComparison[] = [];
-      for (const { item, sets } of d.exercises) {
+      const historicos = await Promise.all(
+        d.exercises.map(({ item }) => getExerciseHistory(db, item.exercicio_id, 20, sid)),
+      );
+      d.exercises.forEach(({ item, sets }, i) => {
         const ex = getExercise(item.exercicio_id);
-        const prev = (await getExerciseHistory(db, item.exercicio_id, 20, sid)).filter(
-          (h) => h.data < d.session.iniciado_em,
-        );
+        const prev = historicos[i].filter((h) => h.data < d.session.iniciado_em);
         const cur = sets.map(toLogged);
         const kinds = detectRecords(cur, prev, { assistido: ex?.assistido, porTempo: ex?.tipo === 'tempo' });
         if (kinds.length) records.push({ exercicioId: item.exercicio_id, kinds });
         const c = compareExercise(item.exercicio_id, cur, prev[0]?.sets ?? null);
         if (c) comparisons.push(c);
-      }
+      });
       setExtra({ records, comparisons });
     })();
   }, [db, id]);
@@ -63,7 +64,10 @@ export default function Resumo() {
   const melhoras = extra.comparisons.filter((c) => c.deltaPesoKg > 0 || c.deltaReps > 0);
   const msg = motivationalMessage(detail.session.id, extra.records.length > 0, improved);
   const intensity = sessionMuscleIntensity(
-    detail.exercises.map((e) => ({ exercicioId: e.item.exercicio_id, series: e.sets.length })),
+    detail.exercises.map((e) => ({
+      exercicioId: e.item.exercicio_id,
+      series: e.sets.filter((s) => s.aquecimento === 0).length,
+    })),
     getExercise,
   );
 

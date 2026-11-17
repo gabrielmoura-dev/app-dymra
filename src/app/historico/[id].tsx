@@ -1,9 +1,10 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useState } from 'react';
-import { Alert, View } from 'react-native';
+import { View } from 'react-native';
 
 import { getExercise } from '@/catalog';
+import { confirmAction } from '@/components/confirm';
 import { Button, Card, Empty, Row, Screen, Stat, Txt } from '@/components/ui';
 import { deleteSession, getSessionDetail, type SessionDetail } from '@/db/repo';
 import { formatDateLong, formatDuration } from '@/logic/dates';
@@ -31,18 +32,17 @@ export default function HistoricoDetalhe() {
   }));
   const stats = sessionStats(toLogged);
 
-  const apagar = () =>
-    Alert.alert('Apagar treino?', 'Este treino sai do histórico e dos recordes. Não dá para desfazer.', [
-      { text: 'Cancelar', style: 'cancel' },
-      {
-        text: 'Apagar',
-        style: 'destructive',
-        onPress: async () => {
-          await deleteSession(db, detail.session.id);
-          router.back();
-        },
-      },
-    ]);
+  const apagar = async () => {
+    const ok = await confirmAction({
+      title: 'Apagar treino?',
+      message: 'Este treino sai do histórico e dos recordes. Não dá para desfazer.',
+      confirmText: 'Apagar',
+      destructive: true,
+    });
+    if (!ok) return;
+    await deleteSession(db, detail.session.id);
+    router.back();
+  };
 
   return (
     <Screen edges={['bottom']}>
@@ -69,9 +69,12 @@ export default function HistoricoDetalhe() {
               {describeSets(toLogged[i].sets, ex?.tipo)}
             </Txt>
             <View style={{ gap: 2 }}>
-              {sets.map((s, k) => (
+              {sets.map((s) => (
                 <Txt key={s.id} variant="tiny">
-                  Série {k + 1}:{' '}
+                  {s.aquecimento === 1
+                    ? 'Aquecimento'
+                    : `Série ${sets.filter((x) => x.aquecimento === 0 && x.ordem <= s.ordem).length}`}
+                  :{' '}
                   {ex?.tipo === 'tempo'
                     ? `${s.duracao_seg ?? 0} s`
                     : `${s.peso_kg ? `${formatKg(s.peso_kg)} kg × ` : ''}${s.reps ?? 0}`}

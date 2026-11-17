@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { getExercise, getMachine, loadStepFor } from '@/catalog';
 import type { SessionExerciseRow, SetRow } from '@/db/repo';
@@ -9,9 +9,38 @@ import type { Effort } from '@/logic/types';
 import { useStepOverrides } from '@/state/userCatalog';
 import { colors, radius, spacing } from '@/theme';
 
+import { ActionSheet } from './ActionSheet';
+import { confirmAction } from './confirm';
 import { Stepper, TextField } from './inputs';
 import { TechniqueQuick } from './TechniqueChecklist';
-import { Button, Card, Chip, Icon, IconButton, Row, Txt } from './ui';
+import { Button, Card, Chip, Icon, IconButton, Row, Txt, type IconName } from './ui';
+
+/** Atalhos do exercício: visíveis, mas mais discretos que o ✓ das séries. */
+function ToolChip({
+  icon,
+  label,
+  color,
+  active,
+  onPress,
+}: {
+  icon: IconName;
+  label: string;
+  color: string;
+  active?: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      style={({ pressed }) => [styles.tool, active && { borderColor: color }, pressed && { opacity: 0.7 }]}>
+      <Icon name={icon} size={15} color={color} />
+      <Txt variant="small" bold color={colors.text}>
+        {label}
+      </Txt>
+    </Pressable>
+  );
+}
 
 const EFFORTS: { v: Effort; label: string }[] = [
   { v: 1, label: 'Fácil' },
@@ -21,6 +50,9 @@ const EFFORTS: { v: Effort; label: string }[] = [
 
 export interface SessionExerciseCardProps {
   item: SessionExerciseRow;
+  /** Posição no treino (1, 2, 3…) e total de exercícios. */
+  numero: number;
+  total: number;
   sets: SetRow[];
   suggestion: Suggestion | null;
   note: string;
@@ -38,6 +70,7 @@ export function SessionExerciseCard(p: SessionExerciseCardProps) {
   const overrides = useStepOverrides();
   const [showTech, setShowTech] = useState(false);
   const [showNote, setShowNote] = useState(false);
+  const [menuAberto, setMenuAberto] = useState(false);
   const [note, setNote] = useState(p.note);
   const [lastNote, setLastNote] = useState(p.note);
   if (p.note !== lastNote) {
@@ -61,17 +94,31 @@ export function SessionExerciseCard(p: SessionExerciseCardProps) {
   const porTempo = ex.tipo === 'tempo';
   const semCarga = ex.tipo === 'peso-corporal' || porTempo;
 
-  const menu = () =>
-    Alert.alert(ex.nome, undefined, [
-      { text: 'Ver ficha completa', onPress: () => router.push(`/exercicio/${ex.id}`) },
-      { text: 'Tirar do treino de hoje', style: 'destructive', onPress: p.onRemoveExercise },
-      { text: 'Cancelar', style: 'cancel' },
-    ]);
-
   return (
-    <Card style={allDone ? { borderColor: colors.success } : undefined}>
+    <Card style={[styles.card, allDone && { borderColor: colors.success }]}>
+      <ActionSheet
+        visible={menuAberto}
+        title={ex.nome}
+        onClose={() => setMenuAberto(false)}
+        options={[
+          { label: 'Ver ficha completa', icon: 'document-text-outline', onPress: () => router.push(`/exercicio/${ex.id}`) },
+          { label: 'Tirar do treino de hoje', icon: 'trash-outline', destructive: true, onPress: p.onRemoveExercise },
+        ]}
+      />
       <Row style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <View style={[styles.badge, allDone && { backgroundColor: colors.success }]}>
+          {allDone ? (
+            <Icon name="checkmark" size={18} color={colors.accentText} />
+          ) : (
+            <Txt bold color={colors.accentText}>
+              {p.numero}
+            </Txt>
+          )}
+        </View>
         <Pressable style={{ flex: 1, gap: 2 }} onPress={() => router.push(`/exercicio/${ex.id}`)}>
+          <Txt variant="tiny" color={colors.faint}>
+            Exercício {p.numero} de {p.total} · {done}/{p.sets.length} séries
+          </Txt>
           <Txt variant="h3">{ex.nome}</Txt>
           <Txt variant="tiny">
             {machine && machine.nome !== ex.nome ? `${machine.nome} · ` : ''}
@@ -84,21 +131,25 @@ export function SessionExerciseCard(p: SessionExerciseCardProps) {
             </Txt>
           ) : null}
         </Pressable>
-        <Row gap={6}>
-          {allDone ? <Icon name="checkmark-circle" color={colors.success} size={26} /> : null}
-          <IconButton icon="ellipsis-vertical" label="Mais opções" onPress={menu} />
-        </Row>
+        <IconButton icon="ellipsis-vertical" label="Mais opções" onPress={() => setMenuAberto(true)} />
       </Row>
 
       <Row wrap gap={6}>
-        <Chip icon="body-outline" label="Técnica" active={showTech} tone="violet" onPress={() => setShowTech((v) => !v)} />
-        <Chip icon="play-circle-outline" label="Vídeo" onPress={() => router.push(`/exercicio/${ex.id}`)} />
-        <Chip
+        <ToolChip icon="body-outline" label="Técnica" color={colors.violet} active={showTech} onPress={() => setShowTech((v) => !v)} />
+        <ToolChip icon="play-circle-outline" label="Vídeo" color={colors.accent} onPress={() => router.push(`/exercicio/${ex.id}`)} />
+        <ToolChip
           icon="swap-horizontal"
           label="Máquina ocupada"
+          color={colors.warning}
           onPress={() => router.push({ pathname: '/trocar', params: { seId: String(p.item.id) } })}
         />
-        <Chip icon="create-outline" label={p.note ? 'Nota ✓' : 'Nota'} active={showNote} tone="muted" onPress={() => setShowNote((v) => !v)} />
+        <ToolChip
+          icon="create-outline"
+          label={p.note ? 'Nota ✓' : 'Nota'}
+          color={colors.muted}
+          active={showNote}
+          onPress={() => setShowNote((v) => !v)}
+        />
       </Row>
 
       {showTech ? (
@@ -149,12 +200,10 @@ export function SessionExerciseCard(p: SessionExerciseCardProps) {
             <View key={s.id} style={[styles.setRow, ok && styles.setRowDone]}>
               <Row style={{ justifyContent: 'space-between' }}>
                 <Pressable
-                  onLongPress={() =>
-                    Alert.alert(titulo, 'Remover esta série?', [
-                      { text: 'Cancelar', style: 'cancel' },
-                      { text: 'Remover', style: 'destructive', onPress: () => p.onRemoveSet(s.id) },
-                    ])
-                  }
+                  onLongPress={async () => {
+                    const ok = await confirmAction({ title: titulo, message: 'Remover esta série?', confirmText: 'Remover', destructive: true });
+                    if (ok) p.onRemoveSet(s.id);
+                  }}
                   style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 }}>
                   <View style={[styles.setNumber, aquec && styles.setWarm, ok && { backgroundColor: aquec ? colors.warning : colors.accent }]}>
                     {aquec ? (
@@ -234,6 +283,27 @@ export function SessionExerciseCard(p: SessionExerciseCardProps) {
 }
 
 const styles = StyleSheet.create({
+  card: { borderColor: colors.border, gap: spacing.md },
+  badge: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.accent,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 2,
+  },
+  tool: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 8,
+    borderRadius: radius.pill,
+    backgroundColor: colors.surface2,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
   inner: {
     backgroundColor: colors.surface2,
     borderRadius: radius.md,

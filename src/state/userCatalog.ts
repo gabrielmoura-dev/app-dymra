@@ -19,14 +19,53 @@ export async function loadUserCatalog(db: SQLiteDatabase) {
   useUserCatalog.setState({ programs, steps });
 }
 
-export async function saveCustomProgram(db: SQLiteDatabase, p: Program) {
+function setProgramInState(p: Program) {
   useUserCatalog.setState((s) => ({
     programs: s.programs.some((x) => x.id === p.id) ? s.programs.map((x) => (x.id === p.id ? p : x)) : [...s.programs, p],
   }));
+}
+
+export async function saveCustomProgram(db: SQLiteDatabase, p: Program) {
+  cancelPendingSave(p.id);
+  setProgramInState(p);
   await upsertCustomProgram(db, p);
 }
 
+/** Gravações adiadas do editor de fichas, por id da ficha. */
+const pendingSaves = new Map<string, { timer: ReturnType<typeof setTimeout>; flush: () => Promise<void> }>();
+const SAVE_DELAY_MS = 400;
+
+function cancelPendingSave(id: string) {
+  const p = pendingSaves.get(id);
+  if (p) {
+    clearTimeout(p.timer);
+    pendingSaves.delete(id);
+  }
+}
+
+/**
+ * Para edição contínua (digitar o nome, apertar − / +): a tela atualiza na hora
+ * e o banco é gravado uma vez só, quando a pessoa para de mexer.
+ */
+export function saveCustomProgramDebounced(db: SQLiteDatabase, p: Program) {
+  cancelPendingSave(p.id);
+  setProgramInState(p);
+  const flush = async () => {
+    pendingSaves.delete(p.id);
+    await upsertCustomProgram(db, p);
+  };
+  pendingSaves.set(p.id, { timer: setTimeout(() => flush().catch(() => {}), SAVE_DELAY_MS), flush });
+}
+
+/** Grava agora o que estiver adiado (ao sair do editor). */
+export async function flushPendingSaves() {
+  const all = [...pendingSaves.values()];
+  for (const p of all) clearTimeout(p.timer);
+  await Promise.all(all.map((p) => p.flush()));
+}
+
 export async function removeCustomProgram(db: SQLiteDatabase, id: string) {
+  cancelPendingSave(id);
   useUserCatalog.setState((s) => ({ programs: s.programs.filter((x) => x.id !== id) }));
   await deleteCustomProgram(db, id);
 }

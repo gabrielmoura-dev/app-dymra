@@ -8,7 +8,7 @@ import { Pressable, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button, Empty, Icon, IconButton, Row, Screen, Txt } from '@/components/ui';
-import { addProgressPhoto, listProgressPhotos, type PhotoPose } from '@/db/repo';
+import { addProgressPhoto, getLastProgressPhoto, type PhotoPose } from '@/db/repo';
 import { newPhotoFile, photoUri } from '@/services/photos';
 import { colors, spacing } from '@/theme';
 
@@ -27,10 +27,7 @@ export default function CameraFoto() {
   const cam = useRef<CameraView>(null);
 
   useEffect(() => {
-    listProgressPhotos(db).then((ps) => {
-      const last = ps.find((p) => p.pose === pose);
-      setGhost(last ? photoUri(last.arquivo) : null);
-    });
+    getLastProgressPhoto(db, pose ?? 'frente').then((last) => setGhost(last ? photoUri(last.arquivo) : null));
   }, [db, pose]);
 
   if (!permission) return <Screen>{null}</Screen>;
