@@ -95,3 +95,9 @@ describe('catálogo', () => {
     expect(exercisesForMachine('nao-existe')).toEqual([]);
   });
 });
+
+describe('vídeos', () => {
+  it('todo exercício tem vídeo', () => {
+    expect(EXERCISES.filter((e) => !e.video).map((e) => e.id)).toEqual([]);
+  });
+});

@@ -20,7 +20,7 @@ Exemplo de mensagem:
 
 ### 2. Vídeos
 
-Para cada exercício, o link do YouTube (vídeo normal ou Shorts). Se o trecho certo começa no meio, mande o link com o tempo (`?t=42`) ou diga "começa em 0:42".
+Todos os exercícios de exemplo já têm vídeo (veja [VIDEOS.md](VIDEOS.md)). Para trocar ou para exercícios novos, mande o link do YouTube (vídeo normal ou Shorts). Se o trecho certo começa no meio, mande o link com o tempo (`?t=42`) ou diga "começa em 0:42".
 
 ### 3. Fichas
 

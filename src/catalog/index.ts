@@ -4,11 +4,15 @@ import { UPPER_EXERCISES } from './exercises-upper';
 import { MACHINES } from './machines';
 import { PROGRAMS } from './programs';
 import type { Exercise, Machine, Muscle, Program } from './types';
+import { VIDEOS } from './videos';
 
 /** Suba este número sempre que o catálogo mudar (aparece em Perfil). */
-export const CATALOG_VERSION = '2026.10.19-exemplo';
+export const CATALOG_VERSION = '2026.11.16-exemplo';
 
-export const EXERCISES: Exercise[] = [...LOWER_EXERCISES, ...UPPER_EXERCISES, ...CORE_CARDIO_EXERCISES];
+/** O vídeo vem de `videos.ts`; um `video` escrito no próprio exercício tem prioridade. */
+export const EXERCISES: Exercise[] = [...LOWER_EXERCISES, ...UPPER_EXERCISES, ...CORE_CARDIO_EXERCISES].map((e) =>
+  !e.video && VIDEOS[e.id] ? { ...e, video: VIDEOS[e.id] } : e,
+);
 
 const exerciseById = new Map(EXERCISES.map((e) => [e.id, e]));
 const machineById = new Map(MACHINES.map((m) => [m.id, m]));
@@ -92,6 +96,10 @@ export function validateCatalog(): string[] {
     for (const m of e.maquinaIds) if (!machineById.has(m)) errors.push(`${e.id}: máquina inexistente ${m}`);
     for (const a of e.alternativas ?? []) if (!exerciseById.has(a)) errors.push(`${e.id}: alternativa inexistente ${a}`);
     if (e.tecnica.execucao.length === 0) errors.push(`${e.id}: sem execução`);
+  }
+  for (const [id, video] of Object.entries(VIDEOS)) {
+    if (!exerciseById.has(id)) errors.push(`Vídeo para exercício inexistente: ${id}`);
+    if (!/^[\w-]{11}$/.test(video.youtubeId)) errors.push(`${id}: id de vídeo inválido`);
   }
   for (const p of PROGRAMS) {
     for (const d of p.dias) {
