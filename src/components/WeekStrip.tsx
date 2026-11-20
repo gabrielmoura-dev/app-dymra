@@ -76,8 +76,8 @@ export function WeekStrip({ p }: { p: Program }) {
     }, [db]),
   );
 
-  const doLembrete = profile.lembreteTreinoDias.length > 0;
-  const diasTreino = doLembrete ? profile.lembreteTreinoDias : defaultTrainingDays(profile.metaSemanal ?? p.dias.length);
+  // Dias do lembrete; sem lembrete, dias sugeridos pela meta semanal.
+  const diasTreino = profile.lembreteTreinoDias.length > 0 ? profile.lembreteTreinoDias : defaultTrainingDays(profile.metaSemanal ?? p.dias.length);
   const semana = planWeek(p, sessoes, diasTreino);
   const hoje = semana.find((d) => d.hoje);
   const proximo = semana.find((d) => d.status === 'planejado');
@@ -106,11 +106,6 @@ export function WeekStrip({ p }: { p: Program }) {
           <Dia key={d.data.toISOString()} d={d} p={p} />
         ))}
       </View>
-      <Txt variant="tiny">
-        {doLembrete
-          ? 'Dias de treino do seu lembrete. Se faltar um dia, o treino passa para o próximo.'
-          : 'Dias sugeridos pela sua meta. Escolha os seus em Perfil → Lembrete de treino.'}
-      </Txt>
     </Card>
   );
 }

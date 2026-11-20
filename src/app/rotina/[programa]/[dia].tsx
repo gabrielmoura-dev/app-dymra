@@ -3,7 +3,7 @@ import { useSQLiteContext } from 'expo-sqlite';
 import { useState } from 'react';
 import { Alert, View } from 'react-native';
 
-import { getExercise, getMachine, MUSCLE_LABELS } from '@/catalog';
+import { getExercise } from '@/catalog';
 import { MuscleMap } from '@/components/MuscleMap';
 import { Button, Card, Empty, Icon, Row, Screen, Txt } from '@/components/ui';
 import { getActiveSessionId } from '@/db/repo';
@@ -83,12 +83,7 @@ export default function RotinaDia() {
                   {r.duracaoSeg
                     ? `${r.series}× ${r.duracaoSeg >= 120 ? `${Math.round(r.duracaoSeg / 60)} min` : `${r.duracaoSeg} s`}`
                     : `${r.series}× ${r.repsMin === r.repsMax ? r.repsMin : `${r.repsMin}–${r.repsMax}`} reps`}
-                  {` · descanso ${r.descansoSeg}s · ${getMachine(ex.maquinaIds[0])?.nome}`}
                 </Txt>
-                <Txt variant="tiny" color={colors.muted}>
-                  {ex.primarios.map((m) => MUSCLE_LABELS[m]).join(', ')}
-                </Txt>
-                {r.observacao ? <Txt variant="tiny" color={colors.violet}>{r.observacao}</Txt> : null}
               </View>
               <Icon name="chevron-forward" color={colors.muted} size={18} />
             </Row>

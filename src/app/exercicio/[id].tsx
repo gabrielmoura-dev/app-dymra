@@ -9,7 +9,7 @@ import type { Muscle } from '@/catalog/types';
 import { LineChart } from '@/components/LineChart';
 import { MuscleMap } from '@/components/MuscleMap';
 import { TechniqueFull } from '@/components/TechniqueChecklist';
-import { Card, Chip, Empty, Icon, Row, Screen, Stat, Txt } from '@/components/ui';
+import { Card, Chip, Empty, Icon, Recolhivel, Row, Screen, Stat, Txt } from '@/components/ui';
 import { VideoPlayer } from '@/components/VideoPlayer';
 import { getExerciseHistory, getExerciseNote } from '@/db/repo';
 import { findAlternatives } from '@/logic/alternatives';
@@ -59,6 +59,15 @@ export default function ExercicioDetalhe() {
               : maxDuration(h.sets),
     }))
     .filter((p) => p.valor > 0);
+  const vezes = `${history.length} ${history.length === 1 ? 'vez' : 'vezes'}`;
+  const resumoProgresso =
+    history.length === 0
+      ? 'Você ainda não fez este exercício'
+      : ex.tipo === 'tempo'
+        ? `Maior tempo: ${pb.duracaoMax} s · ${vezes}`
+        : ex.tipo === 'peso-corporal'
+          ? `Mais repetições: ${pb.repsMax} · ${vezes}`
+          : `${ex.assistido ? 'Maior assistência' : 'Maior carga'}: ${formatKg(pb.pesoMax)} kg · ${vezes}`;
 
   return (
     <Screen edges={['bottom']}>
@@ -99,13 +108,11 @@ export default function ExercicioDetalhe() {
         <MuscleMap values={values} mode="intensidade" height={200} />
       </Card>
 
-      <Card>
-        <Txt variant="h3">Como fazer certo</Txt>
+      <Recolhivel titulo="Como fazer certo" icon="school-outline" resumo="Ajuste, passo a passo e erros comuns">
         <TechniqueFull t={ex.tecnica} />
-      </Card>
+      </Recolhivel>
 
-      <Card>
-        <Txt variant="h3">Seu progresso</Txt>
+      <Recolhivel titulo="Seu progresso" icon="trending-up" resumo={resumoProgresso}>
         {history.length === 0 ? (
           <Txt color={colors.muted}>Você ainda não fez este exercício.</Txt>
         ) : (
@@ -141,11 +148,13 @@ export default function ExercicioDetalhe() {
             ))}
           </>
         )}
-      </Card>
+      </Recolhivel>
 
       {alts.length > 0 ? (
-        <Card>
-          <Txt variant="h3">Se a máquina estiver ocupada</Txt>
+        <Recolhivel
+          titulo="Se a máquina estiver ocupada"
+          icon="swap-horizontal"
+          resumo={`${alts.length} ${alts.length === 1 ? 'alternativa' : 'alternativas'}`}>
           {alts.map((a) => (
             <Pressable
               key={`${a.exercise.id}-${a.machineId}`}
@@ -163,7 +172,7 @@ export default function ExercicioDetalhe() {
             </Pressable>
           ))}
           <Txt variant="tiny">Durante o treino, toque em “Máquina ocupada” para trocar.</Txt>
-        </Card>
+        </Recolhivel>
       ) : null}
     </Screen>
   );
