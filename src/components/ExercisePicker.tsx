@@ -7,8 +7,9 @@ import { frequentIds, MIN_VEZES, rankByUsage } from '@/logic/usage';
 import { useExerciseUsage } from '@/state/usage';
 import { colors } from '@/theme';
 
+import { FavoriteStar } from './FavoriteStar';
 import { TextField } from './inputs';
-import { Card, Empty, Icon, Recolhivel, Row, Txt } from './ui';
+import { Card, Empty, Recolhivel, Row, Txt } from './ui';
 
 const FILTERS: { label: string; muscles: Muscle[] }[] = [
   { label: 'Pernas', muscles: ['quadriceps', 'posteriores', 'adutores', 'panturrilha'] },
@@ -48,22 +49,25 @@ const MAIS_USADOS = 'Seus mais usados';
 /** Os mesmos grupos do antigo filtro (Pernas, Glúteos…), agora como cards que se abrem. */
 const GRUPOS: { label: string; muscles: Muscle[] }[] = [...FILTERS, { label: 'Cardio', muscles: [] }];
 
-function ExerciseRow({ e, vezes, onPick, inset }: { e: Exercise; vezes: number; onPick: () => void; inset?: boolean }) {
+/** Um exercício da lista: nome com a estrela de favorito no canto direito e, embaixo, músculos e máquina. */
+export function ExerciseRow({ e, vezes = 0, onPick, inset }: { e: Exercise; vezes?: number; onPick: () => void; inset?: boolean }) {
   return (
-    <Card onPress={onPick} style={[{ paddingVertical: 12 }, inset && { backgroundColor: colors.surface2 }]}>
+    <Card onPress={onPick} style={[{ paddingVertical: 12, gap: 2 }, inset && { backgroundColor: colors.surface2 }]}>
+      <Row style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <Txt bold style={{ flex: 1 }}>
+          {e.nome}
+        </Txt>
+        <FavoriteStar exercicioId={e.id} />
+      </Row>
       <Row style={{ justifyContent: 'space-between' }}>
-        <View style={{ flex: 1, gap: 2 }}>
-          <Txt bold>{e.nome}</Txt>
-          <Txt variant="tiny">
-            {e.primarios.map((m) => MUSCLE_LABELS[m]).join(', ') || 'Cardio'} · {getMachine(e.maquinaIds[0])?.nome}
-          </Txt>
-        </View>
+        <Txt variant="tiny" style={{ flex: 1 }}>
+          {e.primarios.map((m) => MUSCLE_LABELS[m]).join(', ') || 'Cardio'} · {getMachine(e.maquinaIds[0])?.nome}
+        </Txt>
         {vezes >= MIN_VEZES ? (
           <Txt variant="tiny" color={colors.accent}>
             {vezes}×
           </Txt>
         ) : null}
-        <Icon name="chevron-forward" color={colors.muted} size={18} />
       </Row>
     </Card>
   );

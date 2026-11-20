@@ -825,3 +825,23 @@ export async function setMachineStep(db: SQLiteDatabase, maquinaId: string, pass
     passoKg,
   );
 }
+
+/** Exercícios favoritos, do mais recente para o mais antigo. */
+export async function listFavoriteExercises(db: SQLiteDatabase): Promise<string[]> {
+  const rows = await db.getAllAsync<{ exercicio_id: string }>(
+    'SELECT exercicio_id FROM favorite_exercises ORDER BY criado_em DESC',
+  );
+  return rows.map((r) => r.exercicio_id);
+}
+
+export async function setFavoriteExercise(db: SQLiteDatabase, exercicioId: string, favorito: boolean): Promise<void> {
+  if (favorito) {
+    await db.runAsync(
+      'INSERT OR IGNORE INTO favorite_exercises (exercicio_id, criado_em) VALUES (?, ?)',
+      exercicioId,
+      new Date().toISOString(),
+    );
+  } else {
+    await db.runAsync('DELETE FROM favorite_exercises WHERE exercicio_id = ?', exercicioId);
+  }
+}

@@ -4,16 +4,17 @@ import { useState } from 'react';
 import { View } from 'react-native';
 
 import { exercisesForMachine, getExercise, MACHINES, machineStep } from '@/catalog';
-import { ExercisePicker } from '@/components/ExercisePicker';
-import { Button, Card, Chip, Icon, Recolhivel, Row, Screen, Txt } from '@/components/ui';
+import { ExercisePicker, ExerciseRow } from '@/components/ExercisePicker';
+import { Button, Card, Chip, Empty, Icon, Recolhivel, Row, Screen, Txt } from '@/components/ui';
 import { formatKg } from '@/logic/strength';
 import { machineUsage, MIN_VEZES, rankByUsage } from '@/logic/usage';
 import { useExerciseUsage } from '@/state/usage';
-import { useStepOverrides } from '@/state/userCatalog';
+import { useFavorites, useStepOverrides } from '@/state/userCatalog';
 import { colors, radius } from '@/theme';
 
 export default function Maquinas() {
-  const [aba, setAba] = useState<'maquinas' | 'exercicios'>('maquinas');
+  const [aba, setAba] = useState<'maquinas' | 'exercicios' | 'favoritos'>('maquinas');
+  const favoritos = useFavorites();
   const overrides = useStepOverrides();
   const usage = useExerciseUsage();
   const porMaquina = machineUsage(usage, (id) => getExercise(id)?.maquinaIds ?? []);
@@ -36,10 +37,22 @@ export default function Maquinas() {
       <Row>
         <Chip label="Máquinas" active={aba === 'maquinas'} onPress={() => setAba('maquinas')} />
         <Chip label="Exercícios" active={aba === 'exercicios'} onPress={() => setAba('exercicios')} />
+        <Chip icon="star" label="Favoritos" active={aba === 'favoritos'} onPress={() => setAba('favoritos')} />
       </Row>
 
       {aba === 'exercicios' ? (
         <ExercisePicker onPick={(e) => router.push(`/exercicio/${e.id}`)} />
+      ) : aba === 'favoritos' ? (
+        favoritos.length === 0 ? (
+          <Empty icon="star-outline" title="Nenhum favorito ainda" text="Toque na estrela de um exercício para guardá-lo aqui." />
+        ) : (
+          favoritos
+            .map((id) => getExercise(id))
+            .filter((e) => e != null)
+            .map((e) => (
+              <ExerciseRow key={e.id} e={e} vezes={usage.get(e.id)?.vezes ?? 0} onPick={() => router.push(`/exercicio/${e.id}`)} />
+            ))
+        )
       ) : (
         areas.map(({ area, maquinas, maisUsada }) => (
           <Recolhivel

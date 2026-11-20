@@ -1,13 +1,13 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 
 import { getExercise, getMachine } from '@/catalog';
 import type { Program, RoutineDay, RoutineExercise } from '@/catalog/types';
 import { confirmAction } from '@/components/confirm';
 import { Stepper, TextField } from '@/components/inputs';
-import { Button, Card, Chip, Empty, IconButton, Row, Screen, Txt } from '@/components/ui';
+import { Button, Card, Chip, Empty, IconButton, Recolhivel, Row, Screen, Txt } from '@/components/ui';
 import { nextDayId } from '@/logic/programGenerator';
 import { useProfile, useRequiredProfile } from '@/state/profile';
 import { flushPendingSaves, removeCustomProgram, saveCustomProgramDebounced, useUserCatalog } from '@/state/userCatalog';
@@ -119,6 +119,8 @@ export default function EditarFicha() {
   const profile = useRequiredProfile();
   const { update } = useProfile();
   const program = useUserCatalog((s) => s.programs.find((p) => p.id === id));
+  // Um treino aberto por vez; os outros ficam como cards fechados.
+  const [aberto, setAberto] = useState<string | null>(null);
 
   // Ao sair do editor, grava o que ainda estiver esperando.
   useEffect(() => () => void flushPendingSaves().catch(() => {}), []);
@@ -143,6 +145,7 @@ export default function EditarFicha() {
   const adicionarDia = () => {
     const novoId = nextDayId(program.dias);
     salvar({ ...program, dias: [...program.dias, { id: novoId, nome: `Treino ${novoId}`, foco: '', exercicios: [] }] });
+    setAberto(novoId);
   };
 
   const apagarDia = async (dia: RoutineDay) => {
@@ -184,7 +187,14 @@ export default function EditarFicha() {
       </Card>
 
       {program.dias.map((dia) => (
-        <Card key={dia.id}>
+        <Recolhivel
+          key={dia.id}
+          titulo={dia.nome || 'Treino sem nome'}
+          icon="barbell-outline"
+          iconColor={colors.accent}
+          resumo={`${dia.exercicios.length} ${dia.exercicios.length === 1 ? 'exercício' : 'exercícios'}${dia.foco ? ` · ${dia.foco}` : ''}`}
+          aberto={aberto === dia.id}
+          onToggle={() => setAberto(aberto === dia.id ? null : dia.id)}>
           <Row style={{ alignItems: 'flex-end' }}>
             <TextField label="Treino" value={dia.nome} onChangeText={(nome) => salvarDia({ ...dia, nome })} />
             <IconButton icon="trash-outline" label={`Apagar ${dia.nome}`} onPress={() => apagarDia(dia)} color={colors.danger} />
@@ -213,7 +223,7 @@ export default function EditarFicha() {
             title="Adicionar exercício"
             onPress={() => router.push({ pathname: '/adicionar', params: { fichaId: program.id, diaId: dia.id } })}
           />
-        </Card>
+        </Recolhivel>
       ))}
 
       <Button variant="secondary" icon="add-circle-outline" title="Adicionar treino (dia)" onPress={adicionarDia} />

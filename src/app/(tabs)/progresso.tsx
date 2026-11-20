@@ -27,9 +27,9 @@ import {
   type BodyMeasure,
   type SessionListItem,
 } from "@/db/repo";
-import { consistency, VOLUME_ZONE_LABEL, volumeZone } from "@/logic/consistency";
+import { consistency } from "@/logic/consistency";
 import { daysAgo, formatDateLong, formatDuration } from "@/logic/dates";
-import { muscleRecovery, weeklyVolume } from "@/logic/recovery";
+import { muscleRecovery } from "@/logic/recovery";
 import { formatKg, personalBests, type PersonalBests } from "@/logic/strength";
 import { useProfile } from "@/state/profile";
 import { useProgram } from "@/state/userCatalog";
@@ -44,7 +44,6 @@ export default function Progresso() {
   const db = useSQLiteContext();
   const [aba, setAba] = useState<Aba>("visao");
   const [recovery, setRecovery] = useState<Record<Muscle, number> | null>(null);
-  const [volume, setVolume] = useState<Record<Muscle, number> | null>(null);
   const [sessions, setSessions] = useState<SessionListItem[]>([]);
   const [bests, setBests] = useState<
     { id: string; pb: PersonalBests; vezes: number }[]
@@ -67,7 +66,6 @@ export default function Progresso() {
         ]);
         if (!alive) return;
         setRecovery(muscleRecovery(sets, getExercise));
-        setVolume(weeklyVolume(sets, getExercise));
         setSessions(sess);
         setMeasures(meds);
         const out = [...historico].map(([id, h]) => ({
@@ -89,12 +87,6 @@ export default function Progresso() {
   );
 
   const ult30 = sessions.filter((s) => new Date(s.iniciado_em) >= daysAgo(30));
-  const volMax = volume ? Math.max(10, ...Object.values(volume)) : 10;
-  const volSorted = volume
-    ? (Object.entries(volume) as [Muscle, number][])
-        .filter(([, v]) => v > 0)
-        .sort((a, b) => b[1] - a[1])
-    : [];
   // Músculos ainda cansados (abaixo de 85% recuperados), do mais cansado para o menos.
   const recuperando = recovery
     ? (Object.entries(recovery) as [Muscle, number][])
@@ -156,20 +148,13 @@ export default function Progresso() {
             <Txt variant="h3">Constância</Txt>
             <Row gap={spacing.lg}>
               <Stat
-                label={`treinos nesta semana (meta ${constancia.meta})`}
+                label="nesta semana"
                 value={`${constancia.nestaSemana}/${constancia.meta}`}
                 color={constancia.nestaSemana >= constancia.meta ? colors.accent : colors.text}
               />
               <Stat label="semanas seguidas" value={String(constancia.semanasSeguidas)} color={colors.warning} />
             </Row>
             <ProgressBar value={Math.min(1, constancia.nestaSemana / constancia.meta)} color={colors.accent} />
-            <Txt variant="small" color={colors.muted}>
-              Semana passada: {constancia.semanaPassada}/{constancia.meta}
-              {constancia.semanaPassada < constancia.meta && constancia.semanaPassada > 0 ? ' · se está difícil, reduza a meta em Perfil' : ''}
-            </Txt>
-            <Txt variant="tiny">
-              Treinar com regularidade pesa mais do que qualquer treino perfeito. Ajuste a meta em Perfil → Treino (padrão: dias da ficha).
-            </Txt>
           </Card>
 
           <Recolhivel
@@ -182,41 +167,12 @@ export default function Progresso() {
                 : `Recuperando: ${recuperando.slice(0, 3).map((m) => MUSCLE_LABELS[m]).join(", ")}${recuperando.length > 3 ? ` e mais ${recuperando.length - 3}` : ""}`
             }
           >
-            <Txt variant="tiny">
-              Baseado nas séries dos últimos dias. Músculos grandes levam ~72 h,
-              pequenos ~48 h.
-            </Txt>
             {recovery ? (
               <MuscleMap values={recovery} mode="recuperacao" height={280} />
             ) : null}
             <RecoveryLegend />
           </Recolhivel>
 
-          <Card>
-            <Txt variant="h3">Séries por músculo (7 dias)</Txt>
-            <Txt variant="tiny">
-              Exercício principal conta 1 série; músculo auxiliar conta 0,5.
-              De 10 a 20 por semana é a faixa ideal; iniciantes já evoluem com 6 a 10.
-            </Txt>
-            {volSorted.length === 0 ? (
-              <Txt color={colors.muted}>Nenhuma série nos últimos 7 dias.</Txt>
-            ) : (
-              volSorted.map(([m, v]) => (
-                <View key={m} style={{ gap: 4 }}>
-                  <Row style={{ justifyContent: "space-between" }}>
-                    <Txt variant="small">{MUSCLE_LABELS[m]}</Txt>
-                    <Txt variant="small" bold>
-                      {formatKg(v)} · <Txt variant="tiny">{VOLUME_ZONE_LABEL[volumeZone(v)]}</Txt>
-                    </Txt>
-                  </Row>
-                  <ProgressBar
-                    value={v / volMax}
-                    color={volumeZone(v) === "alto" ? colors.warning : v >= 6 ? colors.accent : colors.violet}
-                  />
-                </View>
-              ))
-            )}
-          </Card>
 
           <Recolhivel
             titulo="Peso corporal"

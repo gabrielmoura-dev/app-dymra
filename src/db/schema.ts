@@ -134,6 +134,13 @@ const MIGRATIONS: string[] = [
   `
   ALTER TABLE profile ADD COLUMN meta_semanal INTEGER;
   `,
+  // Exercícios favoritos (estrela), na ordem em que foram marcados.
+  `
+  CREATE TABLE IF NOT EXISTS favorite_exercises (
+    exercicio_id TEXT PRIMARY KEY,
+    criado_em TEXT NOT NULL
+  );
+  `,
 ];
 
 export const DATABASE_VERSION = MIGRATIONS.length;
@@ -167,4 +174,5 @@ export const BACKUP_TABLES = [
   'water_log',
   'custom_programs',
   'machine_steps',
+  'favorite_exercises',
 ] as const;

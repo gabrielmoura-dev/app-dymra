@@ -4,19 +4,50 @@ import { create } from 'zustand';
 
 import { getProgram, PROGRAMS } from '@/catalog';
 import type { Program } from '@/catalog/types';
-import { deleteCustomProgram, listCustomPrograms, listMachineSteps, setMachineStep, upsertCustomProgram } from '@/db/repo';
+import {
+  deleteCustomProgram,
+  listCustomPrograms,
+  listFavoriteExercises,
+  listMachineSteps,
+  setFavoriteExercise,
+  setMachineStep,
+  upsertCustomProgram,
+} from '@/db/repo';
 
-/** O que cada pessoa cria no próprio celular: fichas e passo de carga das máquinas. */
+/** O que cada pessoa cria no próprio celular: fichas, passo de carga das máquinas e favoritos. */
 interface UserCatalogState {
   programs: Program[];
   steps: Record<string, number>;
+  /** Ids dos exercícios favoritos, do mais recente para o mais antigo. */
+  favoritos: string[];
 }
 
-export const useUserCatalog = create<UserCatalogState>(() => ({ programs: [], steps: {} }));
+export const useUserCatalog = create<UserCatalogState>(() => ({ programs: [], steps: {}, favoritos: [] }));
 
 export async function loadUserCatalog(db: SQLiteDatabase) {
-  const [programs, steps] = await Promise.all([listCustomPrograms(db), listMachineSteps(db)]);
-  useUserCatalog.setState({ programs, steps });
+  const [programs, steps, favoritos] = await Promise.all([
+    listCustomPrograms(db),
+    listMachineSteps(db),
+    listFavoriteExercises(db),
+  ]);
+  useUserCatalog.setState({ programs, steps, favoritos });
+}
+
+/** Marca ou desmarca um exercício como favorito (a tela muda na hora). */
+export async function toggleFavorite(db: SQLiteDatabase, exercicioId: string) {
+  const era = useUserCatalog.getState().favoritos.includes(exercicioId);
+  useUserCatalog.setState((s) => ({
+    favoritos: era ? s.favoritos.filter((id) => id !== exercicioId) : [exercicioId, ...s.favoritos],
+  }));
+  await setFavoriteExercise(db, exercicioId, !era);
+}
+
+export function useIsFavorite(exercicioId: string): boolean {
+  return useUserCatalog((s) => s.favoritos.includes(exercicioId));
+}
+
+export function useFavorites(): string[] {
+  return useUserCatalog((s) => s.favoritos);
 }
 
 function setProgramInState(p: Program) {

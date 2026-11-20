@@ -6,6 +6,7 @@ import { Pressable, View } from 'react-native';
 
 import { EXERCISES, getExercise, getMachine, MUSCLE_LABELS } from '@/catalog';
 import type { Muscle } from '@/catalog/types';
+import { FavoriteStar } from '@/components/FavoriteStar';
 import { LineChart } from '@/components/LineChart';
 import { MuscleMap } from '@/components/MuscleMap';
 import { TechniqueFull } from '@/components/TechniqueChecklist';
@@ -71,7 +72,7 @@ export default function ExercicioDetalhe() {
 
   return (
     <Screen edges={['bottom']}>
-      <Stack.Screen options={{ title: ex.nome }} />
+      <Stack.Screen options={{ title: ex.nome, headerRight: () => <FavoriteStar exercicioId={ex.id} size={24} /> }} />
       <VideoPlayer video={ex.video} />
 
       <Row style={{ alignItems: 'flex-start' }} gap={12}>
