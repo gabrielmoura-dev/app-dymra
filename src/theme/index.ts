@@ -5,7 +5,7 @@ export const colors = {
   border: '#2A2A38',
   text: '#F4F4F7',
   muted: '#9C9CAD',
-  faint: '#5E5E70',
+  faint: '#8A8AA0',
   accent: '#B8FF3C',
   accentText: '#0B0B10',
   accentSoft: 'rgba(184, 255, 60, 0.14)',

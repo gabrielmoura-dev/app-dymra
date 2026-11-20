@@ -1,7 +1,10 @@
 import * as Haptics from 'expo-haptics';
 import { create } from 'zustand';
 
+import { notify } from '@/components/confirm';
 import { cancelNotification, scheduleRestEnd } from '@/services/notifications';
+
+let avisouSemNotificacao = false;
 
 interface RestTimerState {
   endsAt: number | null;
@@ -24,6 +27,13 @@ export const useRestTimer = create<RestTimerState>((set, get) => ({
     await cancelNotification(get().notificationId);
     set({ endsAt: Date.now() + seconds * 1000, total: seconds, proximo, notificationId: null });
     const id = await scheduleRestEnd(seconds, proximo);
+    if (id == null && !avisouSemNotificacao) {
+      avisouSemNotificacao = true;
+      notify(
+        'Sem aviso fora do app',
+        'As notificações estão desligadas. O descanso só avisa com o app aberto. Ative em Configurações do Android → Apps → Dymra → Notificações.',
+      );
+    }
     // Se o timer foi parado enquanto agendava, cancela.
     if (get().endsAt == null) await cancelNotification(id);
     else set({ notificationId: id });

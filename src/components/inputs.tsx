@@ -99,7 +99,21 @@ export function Stepper({
         <IconButton icon="remove" label="Diminuir" onPress={() => bump(-1)} size={18} />
         <TextInput
           value={text}
-          onChangeText={setText}
+          onChangeText={(t) => {
+            setText(t);
+            // Grava na hora: tocar direto no ✓ com o teclado aberto não perde o valor digitado.
+            const n = parseNumber(t);
+            if (n == null) {
+              if (t.trim() === '') {
+                setLastValue(null);
+                onChange(null);
+              }
+              return;
+            }
+            const v = Math.max(min, decimals ? Math.round(n * 100) / 100 : Math.round(n));
+            setLastValue(v);
+            onChange(v);
+          }}
           onEndEditing={(e) => commit(e.nativeEvent.text)}
           onBlur={() => commit(text)}
           keyboardType={decimals ? 'decimal-pad' : 'number-pad'}

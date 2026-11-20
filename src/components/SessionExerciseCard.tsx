@@ -299,6 +299,7 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingHorizontal: spacing.md,
     paddingVertical: 8,
+    minHeight: 44,
     borderRadius: radius.pill,
     backgroundColor: colors.surface2,
     borderWidth: 1,
