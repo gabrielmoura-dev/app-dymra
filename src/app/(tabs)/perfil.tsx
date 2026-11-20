@@ -9,7 +9,7 @@ import { CATALOG_VERSION } from '@/catalog';
 import type { Goal } from '@/catalog/types';
 import { confirmAction, notify } from '@/components/confirm';
 import { formatInput, parseNumber, Stepper, TextField } from '@/components/inputs';
-import { Button, Chip, Divider, Recolhivel, Row, Screen, Txt } from '@/components/ui';
+import { Button, Card, Chip, Divider, Icon, Recolhivel, Row, Screen, Txt } from '@/components/ui';
 import { formatDateLong } from '@/logic/dates';
 import { GOAL_LABELS } from '@/logic/progression';
 import { BackupError, exportBackup, importBackup } from '@/services/backup';
@@ -240,11 +240,11 @@ export default function Perfil() {
         />
       </Recolhivel>
 
-      <Recolhivel
-        titulo="Health Connect"
-        icon="heart-circle-outline"
-        iconColor={colors.danger}
-        resumo={profile.healthConnect ? 'Conectado' : 'Desligado'}>
+      <Card>
+        <Row>
+          <Icon name="heart-circle-outline" color={colors.danger} />
+          <Txt variant="h3">Health Connect</Txt>
+        </Row>
         <Txt variant="small" color={colors.muted}>
           Salva seus treinos e seu peso no Health Connect e lê calorias e frequência cardíaca do relógio para o resumo do treino.
         </Txt>
@@ -256,29 +256,33 @@ export default function Perfil() {
           />
         </Linha>
         {profile.healthConnect ? <Button small variant="ghost" title="Gerenciar permissões" onPress={openHealthSettings} /> : null}
-      </Recolhivel>
+      </Card>
 
-      <Recolhivel
-        titulo="Backup"
-        icon="cloud-upload-outline"
-        iconColor={colors.violet}
-        resumo={`Último backup: ${profile.ultimoBackupEm ? formatDateLong(profile.ultimoBackupEm) : 'nunca'}`}>
+      <Card>
+        <Row>
+          <Icon name="cloud-upload-outline" color={colors.violet} />
+          <Txt variant="h3">Backup</Txt>
+        </Row>
         <Txt variant="small" color={colors.muted}>
           Seus dados ficam só neste celular. Faça backup e salve no Google Drive ou mande para você no WhatsApp. As fotos de progresso não entram no backup.
+        </Txt>
+        <Txt variant="tiny">
+          Último backup: {profile.ultimoBackupEm ? formatDateLong(profile.ultimoBackupEm) : 'nunca'}
         </Txt>
         <Row>
           <Button title="Fazer backup" variant="violet" onPress={backup} loading={busy === 'backup'} style={{ flex: 1 }} />
           <Button title="Restaurar" variant="ghost" onPress={restaurar} loading={busy === 'restore'} style={{ flex: 1 }} />
         </Row>
-      </Recolhivel>
+      </Card>
 
-      <Recolhivel
-        titulo="Sobre"
-        icon="information-circle-outline"
-        resumo={`Dymra ${Constants.expoConfig?.version ?? ''} · catálogo ${CATALOG_VERSION}`}>
+      <Card>
+        <Txt variant="h3">Sobre</Txt>
+        <Txt variant="small" color={colors.muted}>
+          Dymra {Constants.expoConfig?.version ?? ''} · catálogo {CATALOG_VERSION}
+        </Txt>
         <Txt variant="tiny">Atualização: {Updates.updateId ? Updates.updateId.slice(0, 8) : 'versão do APK'}</Txt>
         <Button small variant="secondary" icon="refresh" title="Procurar atualização" onPress={buscarAtualizacao} loading={busy === 'update'} />
-      </Recolhivel>
+      </Card>
     </Screen>
   );
 }

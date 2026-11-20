@@ -45,17 +45,8 @@ export function filterExercises(query: string, filter: Muscle[] | null): Exercis
 
 const MAIS_USADOS = 'Seus mais usados';
 
-/** Grupo de cada exercício na lista (pelo primeiro músculo principal). */
-function grupoDe(e: Exercise): string {
-  if (e.padrao === 'cardio' || e.primarios.length === 0) return 'Cardio';
-  for (const m of e.primarios) {
-    const f = FILTERS.find((x) => x.muscles.includes(m));
-    if (f) return f.label;
-  }
-  return 'Outros';
-}
-
-const GRUPOS = [...FILTERS.map((f) => f.label), 'Cardio', 'Outros'];
+/** Os mesmos grupos do antigo filtro (Pernas, Glúteos…), agora como cards que se abrem. */
+const GRUPOS: { label: string; muscles: Muscle[] }[] = [...FILTERS, { label: 'Cardio', muscles: [] }];
 
 function ExerciseRow({ e, vezes, onPick, inset }: { e: Exercise; vezes: number; onPick: () => void; inset?: boolean }) {
   return (
@@ -89,23 +80,23 @@ export function ExercisePicker({ onPick }: { onPick: (e: Exercise) => void }) {
     () => frequentIds(usage).map(getExercise).filter((e): e is Exercise => e != null),
     [usage],
   );
-  const [escolhido, setEscolhido] = useState<string | null | undefined>(undefined);
-  const aberto = escolhido === undefined ? (frequentes.length > 0 ? MAIS_USADOS : null) : escolhido;
-  const toggle = (g: string) => setEscolhido(aberto === g ? null : g);
+  // Tudo começa fechado: a lista só aparece quando a pessoa toca num grupo.
+  const [aberto, setAberto] = useState<string | null>(null);
+  const toggle = (g: string) => setAberto(aberto === g ? null : g);
 
   const buscando = q.trim() !== '';
   const resultados = useMemo(
     () => (buscando ? rankByUsage(filterExercises(q, null), (e) => e.id, usage) : []),
     [buscando, q, usage],
   );
-  const grupos = useMemo(() => {
-    const por = new Map<string, Exercise[]>();
-    for (const e of EXERCISES) {
-      const g = grupoDe(e);
-      por.set(g, [...(por.get(g) ?? []), e]);
-    }
-    return GRUPOS.filter((g) => por.has(g)).map((g) => ({ g, lista: rankByUsage(por.get(g)!, (e) => e.id, usage) }));
-  }, [usage]);
+  const grupos = useMemo(
+    () =>
+      GRUPOS.map(({ label, muscles }) => ({
+        g: label,
+        lista: rankByUsage(filterExercises('', muscles), (e) => e.id, usage),
+      })).filter(({ lista }) => lista.length > 0),
+    [usage],
+  );
 
   const vezes = (e: Exercise) => usage.get(e.id)?.vezes ?? 0;
 

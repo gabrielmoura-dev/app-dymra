@@ -18,16 +18,14 @@ export default function Maquinas() {
   const usage = useExerciseUsage();
   const porMaquina = machineUsage(usage, (id) => getExercise(id)?.maquinaIds ?? []);
   const [aberta, setAberta] = useState<string | null>(null);
-  // Cada área vira um card; as máquinas mais usadas sobem dentro dela e
-  // as áreas onde a pessoa mais treina sobem na tela.
-  const areas = [...new Set(MACHINES.map((m) => m.area))]
-    .map((area, ordem) => {
-      const maquinas = rankByUsage(MACHINES.filter((m) => m.area === area), (m) => m.id, porMaquina);
-      const top = maquinas[0];
-      const uso = top ? (porMaquina.get(top.id)?.vezes ?? 0) : 0;
-      return { area, ordem, maquinas, uso, maisUsada: uso >= MIN_VEZES ? top : null };
-    })
-    .sort((a, b) => (b.uso >= MIN_VEZES ? b.uso : 0) - (a.uso >= MIN_VEZES ? a.uso : 0) || a.ordem - b.ordem);
+  // Cada área é um card que se abre ao toque, na ordem do catálogo;
+  // dentro dela, as máquinas mais usadas sobem.
+  const areas = [...new Set(MACHINES.map((m) => m.area))].map((area) => {
+    const maquinas = rankByUsage(MACHINES.filter((m) => m.area === area), (m) => m.id, porMaquina);
+    const top = maquinas[0];
+    const uso = top ? (porMaquina.get(top.id)?.vezes ?? 0) : 0;
+    return { area, maquinas, maisUsada: uso >= MIN_VEZES ? top : null };
+  });
 
   return (
     <Screen>

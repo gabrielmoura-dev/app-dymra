@@ -62,7 +62,7 @@ Não há Android SDK nem emulador neste computador, então testei as telas no na
 ## Telas em cards (20/11/2026)
 
 - **Treino em aberto**: só o exercício em andamento fica aberto. Os outros viram uma linha com nome e "x/y séries" (✓ verde quando terminados). Toque para abrir; abrir um recolhe o anterior.
-- **Máquinas**: cada área (Pernas, Pesos livres, Costas…) é um card fechado com o número de máquinas e a mais usada. As áreas onde a pessoa mais treina sobem.
-- **Exercícios**: card "Seus mais usados" aberto no topo (quando há histórico) e um card fechado por grupo (Pernas, Glúteos, Peito…). A busca mostra a lista direta.
+- **Máquinas**: cada área (Pernas, Pesos livres, Costas…) é um card fechado, na ordem do catálogo, com o número de máquinas e a mais usada. Toque para ver as máquinas.
+- **Exercícios**: a barra de filtros virou cards fechados com os mesmos grupos (Pernas, Glúteos, Peito… e Cardio). Toque para ver os exercícios do grupo; "Seus mais usados" fica no topo, também fechado. A busca mostra a lista direta.
 - **Progresso**: Recuperação muscular e Peso corporal começam recolhidos, com um resumo ("Tudo recuperado", "Último: 60 kg").
-- **Perfil**: todas as seções viram cards fechados com o resumo do que está configurado.
+- **Perfil**: Seus dados, Treino e Lembrete de treino são cards fechados com resumo. Health Connect, Backup e Sobre ficam sempre visíveis.
