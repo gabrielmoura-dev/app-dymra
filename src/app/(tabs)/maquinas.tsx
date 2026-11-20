@@ -3,16 +3,20 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { View } from 'react-native';
 
-import { exercisesForMachine, MACHINES, machineStep } from '@/catalog';
+import { exercisesForMachine, getExercise, MACHINES, machineStep } from '@/catalog';
 import { ExercisePicker } from '@/components/ExercisePicker';
 import { Button, Card, Chip, Icon, Row, Screen, Txt } from '@/components/ui';
 import { formatKg } from '@/logic/strength';
+import { machineUsage, MIN_VEZES, rankByUsage } from '@/logic/usage';
+import { useExerciseUsage } from '@/state/usage';
 import { useStepOverrides } from '@/state/userCatalog';
 import { colors, radius } from '@/theme';
 
 export default function Maquinas() {
   const [aba, setAba] = useState<'maquinas' | 'exercicios'>('maquinas');
   const overrides = useStepOverrides();
+  const usage = useExerciseUsage();
+  const porMaquina = machineUsage(usage, (id) => getExercise(id)?.maquinaIds ?? []);
   const areas = [...new Set(MACHINES.map((m) => m.area))];
 
   return (
@@ -32,7 +36,7 @@ export default function Maquinas() {
         areas.map((area) => (
           <View key={area} style={{ gap: 8 }}>
             <Txt variant="label">{area}</Txt>
-            {MACHINES.filter((m) => m.area === area).map((m) => (
+            {rankByUsage(MACHINES.filter((m) => m.area === area), (m) => m.id, porMaquina).map((m) => (
               <Card key={m.id} onPress={() => router.push(`/maquina/${m.id}`)} style={{ paddingVertical: 12 }}>
                 <Row>
                   {m.foto ? (
@@ -51,9 +55,16 @@ export default function Maquinas() {
                     </View>
                   )}
                   <View style={{ flex: 1 }}>
-                    <Txt bold>{m.nome}</Txt>
+                    <Row gap={6}>
+                      <Txt bold style={{ flexShrink: 1 }}>{m.nome}</Txt>
+                      {(porMaquina.get(m.id)?.vezes ?? 0) >= MIN_VEZES ? (
+                        <Txt variant="tiny" color={colors.accent}>
+                          {porMaquina.get(m.id)!.vezes}× usada
+                        </Txt>
+                      ) : null}
+                    </Row>
                     <Txt variant="tiny">
-                      {exercisesForMachine(m.id).length} exercícios
+                      {exercisesForMachine(m.id).length} {exercisesForMachine(m.id).length === 1 ? 'exercício' : 'exercícios'}
                       {machineStep(m, overrides) > 0 ? ` · sobe de ${formatKg(machineStep(m, overrides))} em ${formatKg(machineStep(m, overrides))} kg` : ''}
                     </Txt>
                   </View>

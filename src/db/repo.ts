@@ -1,7 +1,6 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
 import type { Goal, Program, RoutineDay, RoutineExercise, Sex } from '@/catalog/types';
-import { dayKey } from '@/logic/dates';
 import type { Effort, ExerciseHistoryEntry, LoggedSet, TimedSet } from '@/logic/types';
 
 // ---------- Perfil ----------
@@ -578,6 +577,19 @@ export async function getCompletedSetsSince(db: SQLiteDatabase, sinceIso: string
 }
 
 /** Histórico de todos os exercícios numa consulta só (para a lista de recordes). */
+/** Em quantos treinos concluídos cada exercício teve pelo menos uma série de trabalho feita. */
+export async function getExerciseUsage(db: SQLiteDatabase): Promise<Map<string, { vezes: number; ultima: string }>> {
+  const rows = await db.getAllAsync<{ exercicio_id: string; vezes: number; ultima: string }>(
+    `SELECT se.exercicio_id, COUNT(DISTINCT s.id) AS vezes, MAX(s.iniciado_em) AS ultima
+     FROM session_exercises se
+     JOIN sessions s ON s.id = se.session_id
+     WHERE s.status = 'concluida'
+       AND EXISTS (SELECT 1 FROM sets st WHERE st.session_exercise_id = se.id AND st.concluida = 1 AND st.aquecimento = 0)
+     GROUP BY se.exercicio_id`,
+  );
+  return new Map(rows.map((r) => [r.exercicio_id, { vezes: r.vezes, ultima: r.ultima }]));
+}
+
 export async function getAllExerciseHistory(db: SQLiteDatabase): Promise<Map<string, ExerciseHistoryEntry[]>> {
   const rows = await db.getAllAsync<SetRow & { exercicio_id: string; sid: number; data: string }>(
     `SELECT st.*, se.exercicio_id, s.id AS sid, s.iniciado_em AS data FROM sets st
@@ -738,39 +750,6 @@ export async function listProgressPhotos(db: SQLiteDatabase): Promise<ProgressPh
 
 export async function deleteProgressPhoto(db: SQLiteDatabase, id: number) {
   await db.runAsync('DELETE FROM progress_photos WHERE id = ?', id);
-}
-
-// ---------- Água ----------
-
-export async function addWater(db: SQLiteDatabase, ml: number) {
-  await db.runAsync(
-    'INSERT INTO water_log (dia, ml, registrado_em) VALUES (?, ?, ?)',
-    dayKey(),
-    ml,
-    new Date().toISOString(),
-  );
-}
-
-export async function undoLastWater(db: SQLiteDatabase) {
-  await db.runAsync(
-    'DELETE FROM water_log WHERE id = (SELECT id FROM water_log WHERE dia = ? ORDER BY id DESC LIMIT 1)',
-    dayKey(),
-  );
-}
-
-export async function getWaterTotal(db: SQLiteDatabase, dia: string = dayKey()): Promise<number> {
-  const r = await db.getFirstAsync<{ total: number | null }>(
-    'SELECT SUM(ml) AS total FROM water_log WHERE dia = ?',
-    dia,
-  );
-  return r?.total ?? 0;
-}
-
-export async function getWaterByDay(db: SQLiteDatabase, sinceDay: string): Promise<{ dia: string; total: number }[]> {
-  return db.getAllAsync<{ dia: string; total: number }>(
-    'SELECT dia, SUM(ml) AS total FROM water_log WHERE dia >= ? GROUP BY dia ORDER BY dia',
-    sinceDay,
-  );
 }
 
 // ---------- Fichas criadas no celular ----------

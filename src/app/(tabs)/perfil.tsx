@@ -10,7 +10,6 @@ import type { Goal } from '@/catalog/types';
 import { confirmAction, notify } from '@/components/confirm';
 import { formatInput, parseNumber, Stepper, TextField } from '@/components/inputs';
 import { Button, Card, Chip, Divider, Icon, Row, Screen, Txt } from '@/components/ui';
-import { suggestedWaterGoal } from '@/logic/calories';
 import { formatDateLong } from '@/logic/dates';
 import { GOAL_LABELS } from '@/logic/progression';
 import { BackupError, exportBackup, importBackup } from '@/services/backup';
@@ -53,14 +52,13 @@ export default function Perfil() {
     notify('Pronto', 'Dados atualizados.');
   };
 
-  const setLembretes = async (patch: { lembreteAgua?: boolean; lembreteTreinoDias?: number[]; lembreteTreinoHora?: number }) => {
+  const setLembretes = async (patch: { lembreteTreinoDias?: number[]; lembreteTreinoHora?: number }) => {
     const next = {
-      agua: patch.lembreteAgua ?? profile.lembreteAgua,
       treinoDias: patch.lembreteTreinoDias ?? profile.lembreteTreinoDias,
       treinoHora: patch.lembreteTreinoHora ?? profile.lembreteTreinoHora,
     };
     const ok = await syncReminders(next);
-    if (!ok && (next.agua || next.treinoDias.length > 0)) {
+    if (!ok && next.treinoDias.length > 0) {
       notify('Notificações bloqueadas', 'Libere as notificações do Dymra nas configurações do Android.');
       return;
     }
@@ -204,27 +202,6 @@ export default function Perfil() {
       </Card>
 
       <Card>
-        <Txt variant="h3">Água</Txt>
-        <Txt variant="label">Meta diária</Txt>
-        <Stepper
-          value={profile.metaAguaMl}
-          onChange={(v) => v != null && update({ metaAguaMl: Math.max(500, Math.round(v)) })}
-          step={250}
-          min={500}
-          suffix="ml"
-          decimals={false}
-        />
-        <Txt variant="tiny">Sugestão para o seu peso: {suggestedWaterGoal(profile.pesoKg)} ml (35 ml por kg).</Txt>
-        <Linha label="Lembretes a cada 2 h (9h–19h)">
-          <Switch
-            value={profile.lembreteAgua}
-            onValueChange={(v) => setLembretes({ lembreteAgua: v })}
-            trackColor={{ true: colors.water, false: colors.surface2 }}
-          />
-        </Linha>
-      </Card>
-
-      <Card>
         <Txt variant="h3">Lembrete de treino</Txt>
         <Row wrap gap={6}>
           {DIAS.map((d, i) => {
@@ -262,7 +239,7 @@ export default function Perfil() {
           <Txt variant="h3">Health Connect</Txt>
         </Row>
         <Txt variant="small" color={colors.muted}>
-          Salva seus treinos, peso e água no Health Connect e lê calorias e frequência cardíaca do relógio para o resumo do treino.
+          Salva seus treinos e seu peso no Health Connect e lê calorias e frequência cardíaca do relógio para o resumo do treino.
         </Txt>
         <Linha label={hc === 'disponivel' ? 'Conectar' : hc === 'precisa-atualizar' ? 'Atualize o Health Connect' : 'Indisponível neste aparelho'}>
           <Switch

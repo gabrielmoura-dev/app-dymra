@@ -11,7 +11,7 @@
 | 5 | Catálogo de exemplo | Manter as máquinas que existem na academia e remover as outras | Feito quando você mandar a lista/fotos |
 | 6 | Relógio | Gabriel ainda vai comprar; Rita não lembra o modelo | Nada a fazer: sem relógio, as calorias saem pela estimativa (MET). Ao comprar, prefira um que sincronize com o Health Connect |
 | 7 | App do Claude | Os dois têm instalado | — |
-| 8 | Lembrete de água | A cada 2 h, das 9h às 19h | Mantido |
+| 8 | Lembrete de água | A cada 2 h, das 9h às 19h | **Removido em 20/11/2026** a seu pedido: sem card de água, sem meta, sem lembretes (os já agendados são cancelados ao abrir o app) |
 | 9 | Aquecimento | Sim, sugerir | No primeiro exercício pesado de pernas e no de tronco, o treino já vem com 1×12 a ~50% da carga (e, de 30 kg para cima, mais 1×6 a ~75%). Aparece com chama laranja, não conta em volume nem recordes e o descanso depois dele é curto. Dá para desligar em Perfil → Treino |
 | 10 | Fotos no backup | Não precisa | As fotos de progresso ficam só no celular e não entram no backup. Fichas próprias e passos de carga entram |
 
@@ -51,3 +51,10 @@ Não há Android SDK nem emulador neste computador, então testei as telas no na
 - **Revisão da meta**: o card Constância mostra também a semana passada e sugere reduzir a meta quando ela ficou difícil de cumprir.
 - **Acessibilidade e atrito (da pesquisa de mercado, ver `reports/`)**: texto de apoio com contraste ~5:1 (antes ~3:1); alvos de toque de 44 px em chips, botões de ícone e atalhos do exercício; o campo de peso/reps grava a cada dígito (tocar direto no ✓ com o teclado aberto não perde o valor); aviso único quando as notificações estão desligadas e o descanso só avisa com o app aberto.
 - **Descanso persistente**: se o app for fechado no meio do descanso, a barra volta na tela do treino com o tempo restante (e o aviso do sistema continua agendado).
+
+## Ajustes de 20/11/2026
+
+- **Água removida**: saiu da tela Hoje, do Perfil, dos lembretes e do Health Connect.
+- **Fichas mais enxutas**: aparece só a ficha atual. As outras ficam em "Trocar ou criar ficha", em linhas compactas (toque para ver os treinos). Ao escolher uma ficha, a lista se recolhe.
+- **Máquinas mais usadas no topo**: dentro de cada área (Pernas, Costas…), a máquina usada em 2 treinos ou mais sobe, com "N× usada". O resto segue a ordem do catálogo.
+- **Exercícios**: quando a pessoa já tem 5 exercícios feitos em 2 treinos ou mais, a lista inicial mostra só "Seus mais usados" e um botão "Ver todos". Busca e filtros mostram tudo, com os mais usados primeiro. No começo, sem histórico, a lista completa aparece.

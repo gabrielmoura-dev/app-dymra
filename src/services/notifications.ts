@@ -4,7 +4,6 @@ import { Platform } from 'react-native';
 
 const CHANNEL_REST = 'descanso';
 const CHANNEL_REMINDERS = 'lembretes';
-const WATER_HOURS = [9, 11, 13, 15, 17, 19];
 
 let configured = false;
 
@@ -27,7 +26,7 @@ export async function configureNotifications() {
       lightColor: '#B8FF3C',
     });
     await Notifications.setNotificationChannelAsync(CHANNEL_REMINDERS, {
-      name: 'Lembretes de treino e água',
+      name: 'Lembretes de treino',
       importance: Notifications.AndroidImportance.DEFAULT,
     });
   }
@@ -87,21 +86,12 @@ async function cancelByPrefix(prefix: string) {
  * Reagenda os lembretes conforme o perfil.
  * dias: 0 = domingo ... 6 = sábado (como Date.getDay()).
  */
-export async function syncReminders(opts: { agua: boolean; treinoDias: number[]; treinoHora: number }): Promise<boolean> {
+export async function syncReminders(opts: { treinoDias: number[]; treinoHora: number }): Promise<boolean> {
   try {
-    if ((opts.agua || opts.treinoDias.length > 0) && !(await ensureNotificationPermission())) return false;
+    if (opts.treinoDias.length > 0 && !(await ensureNotificationPermission())) return false;
     await cancelByPrefix('agua-');
     await cancelByPrefix('treino-');
     const channel = Platform.OS === 'android' ? { channelId: CHANNEL_REMINDERS } : {};
-    if (opts.agua) {
-      for (const hour of WATER_HOURS) {
-        await Notifications.scheduleNotificationAsync({
-          identifier: `agua-${hour}`,
-          content: { title: 'Hora da água 💧', body: 'Um copo agora ajuda a bater a meta do dia.', ...channel },
-          trigger: { type: Notifications.SchedulableTriggerInputTypes.DAILY, hour, minute: 0, ...channel },
-        });
-      }
-    }
     for (const d of opts.treinoDias) {
       await Notifications.scheduleNotificationAsync({
         identifier: `treino-${d}`,
@@ -118,5 +108,14 @@ export async function syncReminders(opts: { agua: boolean; treinoDias: number[];
     return true;
   } catch {
     return false;
+  }
+}
+
+/** A função de água saiu do app: apaga os lembretes de água que ficaram agendados em versões antigas. */
+export async function cancelWaterReminders(): Promise<void> {
+  try {
+    await cancelByPrefix('agua-');
+  } catch {
+    // sem notificações disponíveis
   }
 }

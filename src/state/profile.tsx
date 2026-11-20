@@ -3,6 +3,8 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 
 import { getProfile, updateProfile as updateProfileDb, type Profile } from '@/db/repo';
 
+import { cancelWaterReminders } from '@/services/notifications';
+
 import { loadUserCatalog } from './userCatalog';
 
 interface ProfileContextValue {
@@ -40,6 +42,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       if (!alive) return;
       setProfile(p);
       setLoading(false);
+      if (p?.lembreteAgua) cancelWaterReminders();
     });
     return () => {
       alive = false;

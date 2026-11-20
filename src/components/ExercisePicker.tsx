@@ -1,12 +1,14 @@
 import { useMemo, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 
-import { EXERCISES, getMachine, MUSCLE_LABELS } from '@/catalog';
+import { EXERCISES, getExercise, getMachine, MUSCLE_LABELS } from '@/catalog';
 import type { Exercise, Muscle } from '@/catalog/types';
+import { frequentIds, MIN_PARA_ENXUGAR, rankByUsage } from '@/logic/usage';
+import { useExerciseUsage } from '@/state/usage';
 import { colors } from '@/theme';
 
 import { TextField } from './inputs';
-import { Card, Chip, Empty, Icon, Row, Txt } from './ui';
+import { Button, Card, Chip, Empty, Icon, Row, Txt } from './ui';
 
 const FILTERS: { label: string; muscles: Muscle[] }[] = [
   { label: 'Pernas', muscles: ['quadriceps', 'posteriores', 'adutores', 'panturrilha'] },
@@ -44,10 +46,19 @@ export function filterExercises(query: string, filter: Muscle[] | null): Exercis
 export function ExercisePicker({ onPick }: { onPick: (e: Exercise) => void }) {
   const [q, setQ] = useState('');
   const [filtro, setFiltro] = useState<string | null>(null);
+  const [verTodos, setVerTodos] = useState(false);
+  const usage = useExerciseUsage();
+  const frequentes = useMemo(
+    () => frequentIds(usage).map(getExercise).filter((e): e is Exercise => e != null),
+    [usage],
+  );
+  // Com histórico suficiente, a lista inicial mostra só o que a pessoa costuma fazer; o resto fica na busca.
+  const enxuta = !verTodos && q.trim() === '' && filtro == null && frequentes.length >= MIN_PARA_ENXUGAR;
   const list = useMemo(() => {
+    if (enxuta) return frequentes;
     const muscles = filtro === 'Cardio' ? [] : (FILTERS.find((f) => f.label === filtro)?.muscles ?? null);
-    return filterExercises(q, muscles);
-  }, [q, filtro]);
+    return rankByUsage(filterExercises(q, muscles), (e) => e.id, usage);
+  }, [enxuta, frequentes, q, filtro, usage]);
 
   return (
     <View style={{ gap: 12 }}>
@@ -59,6 +70,7 @@ export function ExercisePicker({ onPick }: { onPick: (e: Exercise) => void }) {
         ))}
         <Chip label="Cardio" active={filtro === 'Cardio'} onPress={() => setFiltro('Cardio')} />
       </ScrollView>
+      {enxuta ? <Txt variant="label">Seus mais usados</Txt> : null}
       {list.length === 0 ? <Empty icon="search" title="Nada encontrado" /> : null}
       {list.map((e) => (
         <Card key={e.id} onPress={() => onPick(e)} style={{ paddingVertical: 12 }}>
@@ -69,10 +81,24 @@ export function ExercisePicker({ onPick }: { onPick: (e: Exercise) => void }) {
                 {e.primarios.map((m) => MUSCLE_LABELS[m]).join(', ') || 'Cardio'} · {getMachine(e.maquinaIds[0])?.nome}
               </Txt>
             </View>
+            {(usage.get(e.id)?.vezes ?? 0) >= 2 ? (
+              <Txt variant="tiny" color={colors.accent}>
+                {usage.get(e.id)!.vezes}×
+              </Txt>
+            ) : null}
             <Icon name="chevron-forward" color={colors.muted} size={18} />
           </Row>
         </Card>
       ))}
+      {enxuta ? (
+        <Button
+          small
+          variant="ghost"
+          icon="list"
+          title={`Ver todos os ${EXERCISES.length} exercícios`}
+          onPress={() => setVerTodos(true)}
+        />
+      ) : null}
     </View>
   );
 }

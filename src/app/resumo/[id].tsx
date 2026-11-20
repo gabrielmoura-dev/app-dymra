@@ -168,11 +168,11 @@ export default function Resumo() {
         <MuscleMap values={intensity} mode="intensidade" height={220} />
       </Card>
 
-      <Card tone="water">
+      <Card>
         <Row>
-          <Icon name="water" color={colors.water} />
+          <Icon name="restaurant-outline" color={colors.accent} />
           <Txt variant="small" style={{ flex: 1 }}>
-            Beba água agora e capriche na proteína nas próximas refeições para ajudar na recuperação.
+            Capriche na proteína nas próximas refeições e durma bem para ajudar na recuperação.
           </Txt>
         </Row>
       </Card>

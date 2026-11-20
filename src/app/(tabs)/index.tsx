@@ -8,7 +8,6 @@ import type { Muscle, RoutineDay } from '@/catalog/types';
 import { notify } from '@/components/confirm';
 import { MuscleMap } from '@/components/MuscleMap';
 import { Button, Card, Chip, Icon, Row, Screen, Stat, Txt } from '@/components/ui';
-import { WaterCard } from '@/components/WaterCard';
 import {
   getActiveSessionId,
   getCompletedSetsSince,
@@ -190,7 +189,6 @@ export default function Hoje() {
         </Card>
       ) : null}
 
-      <WaterCard metaMl={profile.metaAguaMl} healthConnect={profile.healthConnect} />
 
       <Card onPress={() => router.push('/progresso')}>
         <Row style={{ justifyContent: 'space-between' }}>

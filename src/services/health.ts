@@ -58,7 +58,6 @@ export async function connectHealth(): Promise<boolean> {
       { accessType: 'write', recordType: 'ExerciseSession' },
       { accessType: 'write', recordType: 'Weight' },
       { accessType: 'read', recordType: 'Weight' },
-      { accessType: 'write', recordType: 'Hydration' },
       { accessType: 'read', recordType: 'ActiveCaloriesBurned' },
       { accessType: 'read', recordType: 'TotalCaloriesBurned' },
       { accessType: 'read', recordType: 'HeartRate' },
@@ -138,27 +137,6 @@ export async function writeWeight(kg: number): Promise<boolean> {
         recordType: 'Weight',
         time: new Date().toISOString(),
         weight: { value: kg, unit: 'kilograms' },
-        metadata: { recordingMethod: m.RecordingMethod.RECORDING_METHOD_MANUAL_ENTRY },
-      },
-    ]);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-export async function writeHydration(ml: number): Promise<boolean> {
-  const m = await ready();
-  if (!m) return false;
-  const end = new Date();
-  const start = new Date(end.getTime() - 60_000);
-  try {
-    await m.insertRecords([
-      {
-        recordType: 'Hydration',
-        startTime: start.toISOString(),
-        endTime: end.toISOString(),
-        volume: { value: ml, unit: 'milliliters' },
         metadata: { recordingMethod: m.RecordingMethod.RECORDING_METHOD_MANUAL_ENTRY },
       },
     ]);
