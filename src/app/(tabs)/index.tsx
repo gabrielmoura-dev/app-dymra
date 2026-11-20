@@ -1,3 +1,4 @@
+import { Image } from 'expo-image';
 import { router, useFocusEffect } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useState } from 'react';
@@ -22,6 +23,8 @@ import { startRoutineSession } from '@/state/planning';
 import { useRequiredProfile } from '@/state/profile';
 import { isCustomProgramId, useProgram } from '@/state/userCatalog';
 import { colors, spacing } from '@/theme';
+
+const LOGO = require('../../../assets/images/splash-icon.png');
 
 export default function Hoje() {
   const db = useSQLiteContext();
@@ -105,10 +108,13 @@ export default function Hoje() {
 
   return (
     <Screen>
-      <View style={{ gap: 2 }}>
-        <Txt variant="small" color={colors.muted}>
-          {formatDateLong(new Date().toISOString())}
-        </Txt>
+      <View style={{ gap: 4 }}>
+        <Row gap={2} style={{ marginLeft: -10 }}>
+          <Image source={LOGO} style={{ width: 56, height: 56 }} contentFit="contain" accessibilityLabel="Dymra" />
+          <Txt variant="h2" color={colors.accent} style={{ letterSpacing: 1 }}>
+            Dymra
+          </Txt>
+        </Row>
         <Txt variant="h1">
           {greeting()}, {profile.nome.split(' ')[0]}!
         </Txt>
@@ -221,7 +227,6 @@ export default function Hoje() {
 
       <Row wrap>
         <Chip icon="qr-code-outline" label="Ler QR da máquina" onPress={() => router.push('/scanner')} />
-        <Chip icon="body-outline" label="Corpo e fotos" onPress={() => router.push('/corpo')} />
       </Row>
     </Screen>
   );

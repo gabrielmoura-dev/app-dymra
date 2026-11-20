@@ -3,9 +3,10 @@ import { router, useFocusEffect } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import * as Updates from 'expo-updates';
 import { useCallback, useState } from 'react';
-import { Alert, Switch, View } from 'react-native';
+import { Alert, Switch } from 'react-native';
 
 import { CATALOG_VERSION } from '@/catalog';
+import { addBodyMeasure } from '@/db/repo';
 import type { Goal } from '@/catalog/types';
 import { confirmAction, notify } from '@/components/confirm';
 import { formatInput, parseNumber, Stepper, TextField } from '@/components/inputs';
@@ -13,7 +14,7 @@ import { Button, Card, Chip, Divider, Icon, Recolhivel, Row, Screen, Txt } from 
 import { formatDateLong } from '@/logic/dates';
 import { GOAL_LABELS } from '@/logic/progression';
 import { BackupError, exportBackup, importBackup } from '@/services/backup';
-import { connectHealth, healthStatus, openHealthSettings, type HealthStatus } from '@/services/health';
+import { connectHealth, healthStatus, openHealthSettings, writeWeight, type HealthStatus } from '@/services/health';
 import { syncReminders } from '@/services/notifications';
 import { useProfile, useRequiredProfile } from '@/state/profile';
 import { useProgram } from '@/state/userCatalog';
@@ -37,6 +38,7 @@ export default function Perfil() {
   const { update, refresh } = useProfile();
   const [nome, setNome] = useState(profile.nome);
   const [altura, setAltura] = useState(formatInput(profile.alturaCm));
+  const [peso, setPeso] = useState(formatInput(profile.pesoKg));
   const [hc, setHc] = useState<HealthStatus>('indisponivel');
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -49,6 +51,13 @@ export default function Perfil() {
   const salvarDados = async () => {
     const a = parseNumber(altura);
     await update({ nome: nome.trim() || profile.nome, alturaCm: a && a > 100 && a < 230 ? a : profile.alturaCm });
+    // Peso novo vira um registro (alimenta o gráfico de Peso corporal em Progresso).
+    const p = parseNumber(peso);
+    if (p && p > 25 && p < 300 && p !== profile.pesoKg) {
+      await addBodyMeasure(db, { pesoKg: p });
+      await refresh();
+      if (profile.healthConnect) writeWeight(p);
+    }
     notify('Pronto', 'Dados atualizados.');
   };
 
@@ -148,10 +157,7 @@ export default function Perfil() {
         <TextField label="Nome" value={nome} onChangeText={setNome} />
         <Row gap={spacing.md}>
           <TextField label="Altura" value={altura} onChangeText={setAltura} keyboardType="number-pad" suffix="cm" />
-          <View style={{ flex: 1, gap: 6 }}>
-            <Txt variant="label">Peso</Txt>
-            <Button small variant="secondary" title={`${formatInput(profile.pesoKg)} kg · atualizar`} onPress={() => router.push('/corpo')} />
-          </View>
+          <TextField label="Peso" value={peso} onChangeText={setPeso} keyboardType="decimal-pad" suffix="kg" />
         </Row>
         <Button small variant="secondary" title="Salvar dados" onPress={salvarDados} />
         <Divider />

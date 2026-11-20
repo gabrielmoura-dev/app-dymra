@@ -2,7 +2,6 @@ import { EXERCISES, getExercise, PROGRAMS, validateCatalog } from '@/catalog';
 
 import { findAlternatives } from '../alternatives';
 import { estimateKcal, sessionMet, suggestedWaterGoal } from '../calories';
-import { buildClaudePrompt } from '../claudePrompt';
 import { suggestNext } from '../progression';
 import { muscleInsights, muscleRecovery, weeklyVolume } from '../recovery';
 import { detectRecords, estimate1RM, roundToStep } from '../strength';
@@ -206,29 +205,5 @@ describe('resumo', () => {
     const c = compareExercise('x', [set(45, 10)], [set(40, 10)]);
     expect(c?.deltaPesoKg).toBe(5);
     expect(c?.deltaVolumeKg).toBe(50);
-  });
-});
-
-describe('texto para o Claude', () => {
-  it('inclui objetivo, peso e volume', () => {
-    const txt = buildClaudePrompt({
-      nome: 'Ana',
-      objetivo: 'hipertrofia',
-      sexo: 'feminino',
-      alturaCm: 165,
-      pesos: [
-        { data: '2026-09-01T00:00:00Z', pesoKg: 62 },
-        { data: '2026-10-01T00:00:00Z', pesoKg: 61 },
-      ],
-      volumeSemanal: { gluteos: 9, quadriceps: 6 },
-      muscleLabels: { gluteos: 'Glúteos', quadriceps: 'Quadríceps' } as never,
-      treinos30dias: 10,
-      pose: 'frente',
-      temFotoAnterior: false,
-    });
-    expect(txt).toContain('Hipertrofia');
-    expect(txt).toContain('61 kg');
-    expect(txt).toContain('-1 kg');
-    expect(txt).toContain('Glúteos 9');
   });
 });

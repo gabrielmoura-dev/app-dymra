@@ -63,8 +63,6 @@ function Gate() {
       <Stack.Screen name="maquina/[id]" options={{ title: 'Máquina' }} />
       <Stack.Screen name="historico/[id]" options={{ title: 'Treino feito' }} />
       <Stack.Screen name="rotina/[programa]/[dia]" options={{ title: 'Treino' }} />
-      <Stack.Screen name="corpo" options={{ title: 'Corpo' }} />
-      <Stack.Screen name="camera-foto" options={{ headerShown: false }} />
       <Stack.Screen name="scanner" options={{ title: 'Ler QR code', presentation: 'modal' }} />
       <Stack.Screen name="trocar" options={{ title: 'Máquina ocupada', presentation: 'modal' }} />
       <Stack.Screen name="adicionar" options={{ title: 'Adicionar exercício', presentation: 'modal' }} />

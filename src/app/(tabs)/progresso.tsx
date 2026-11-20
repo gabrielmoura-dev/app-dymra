@@ -185,13 +185,7 @@ export default function Progresso() {
             }
           >
             <LineChart points={pesos} unit="kg" color={colors.violet} />
-            <Button
-              small
-              variant="secondary"
-              icon="camera-outline"
-              title="Corpo e fotos"
-              onPress={() => router.push("/corpo")}
-            />
+            <Txt variant="tiny">Atualize o peso em Perfil → Seus dados.</Txt>
           </Recolhivel>
         </>
       ) : null}
