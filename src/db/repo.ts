@@ -21,6 +21,7 @@ export interface Profile {
   lembreteTreinoHora: number;
   ultimoBackupEm: string | null;
   sugerirAquecimento: boolean;
+  metaSemanal: number | null;
   criadoEm: string;
 }
 
@@ -39,6 +40,7 @@ interface ProfileRow {
   lembrete_treino_hora: number;
   ultimo_backup_em: string | null;
   sugerir_aquecimento: number;
+  meta_semanal: number | null;
   criado_em: string;
 }
 
@@ -69,6 +71,7 @@ export async function getProfile(db: SQLiteDatabase): Promise<Profile | null> {
     lembreteTreinoHora: r.lembrete_treino_hora,
     ultimoBackupEm: r.ultimo_backup_em,
     sugerirAquecimento: r.sugerir_aquecimento !== 0,
+    metaSemanal: r.meta_semanal ?? null,
     criadoEm: r.criado_em,
   };
 }
@@ -108,6 +111,7 @@ const PROFILE_COLUMNS: Record<keyof Omit<Profile, 'criadoEm'>, string> = {
   lembreteTreinoHora: 'lembrete_treino_hora',
   ultimoBackupEm: 'ultimo_backup_em',
   sugerirAquecimento: 'sugerir_aquecimento',
+  metaSemanal: 'meta_semanal',
 };
 
 export async function updateProfile(db: SQLiteDatabase, patch: Partial<Omit<Profile, 'criadoEm'>>) {

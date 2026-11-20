@@ -53,7 +53,7 @@ export default function Progresso() {
   const [visiveis, setVisiveis] = useState(PAGINA);
   const { profile } = useProfile();
   const programa = useProgram(profile?.programaId);
-  const constancia = consistency(sessions.map((s) => s.iniciado_em), programa?.dias.length ?? 3);
+  const constancia = consistency(sessions.map((s) => s.iniciado_em), profile?.metaSemanal ?? programa?.dias.length ?? 3);
 
   useFocusEffect(
     useCallback(() => {
@@ -157,7 +157,7 @@ export default function Progresso() {
             </Row>
             <ProgressBar value={Math.min(1, constancia.nestaSemana / constancia.meta)} color={colors.accent} />
             <Txt variant="tiny">
-              Treinar com regularidade pesa mais do que qualquer treino perfeito. A meta é o número de dias da sua ficha.
+              Treinar com regularidade pesa mais do que qualquer treino perfeito. Ajuste a meta em Perfil → Treino (padrão: dias da ficha).
             </Txt>
           </Card>
 

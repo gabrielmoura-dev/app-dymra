@@ -130,6 +130,10 @@ const MIGRATIONS: string[] = [
   CREATE INDEX IF NOT EXISTS idx_sets_concluida_em ON sets(concluida_em) WHERE concluida = 1;
   CREATE INDEX IF NOT EXISTS idx_measures_data ON body_measures(data);
   `,
+  // Meta de treinos por semana (vazio = usa os dias da ficha).
+  `
+  ALTER TABLE profile ADD COLUMN meta_semanal INTEGER;
+  `,
 ];
 
 export const DATABASE_VERSION = MIGRATIONS.length;

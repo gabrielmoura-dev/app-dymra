@@ -191,6 +191,16 @@ export default function Perfil() {
         <Txt variant="tiny">
           No primeiro exercício pesado de pernas e no de tronco: 1×12 com metade da carga e, acima de 30 kg, mais 1×6 com 3/4.
         </Txt>
+        <Txt variant="label">Meta de treinos por semana</Txt>
+        <Stepper
+          value={profile.metaSemanal ?? 3}
+          onChange={(v) => v != null && update({ metaSemanal: Math.min(7, Math.max(1, Math.round(v))) })}
+          step={1}
+          min={1}
+          suffix="x"
+          decimals={false}
+        />
+        <Txt variant="tiny">Metas específicas e revisadas toda semana ajudam a manter a rotina. Aparece em Progresso.</Txt>
       </Card>
 
       <Card>

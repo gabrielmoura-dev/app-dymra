@@ -71,6 +71,7 @@ const PLACEHOLDER: Profile = {
   lembreteTreinoHora: 18,
   ultimoBackupEm: null,
   sugerirAquecimento: true,
+  metaSemanal: null,
   criadoEm: '',
 };
 
