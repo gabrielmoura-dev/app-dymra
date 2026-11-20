@@ -6,6 +6,7 @@ import { View } from 'react-native';
 import { getExercise, getProgram, PROGRAMS } from '@/catalog';
 import type { Program } from '@/catalog/types';
 import { confirmAction } from '@/components/confirm';
+import { WeekStrip } from '@/components/WeekStrip';
 import { Button, Card, Chip, Icon, Row, Screen, SectionTitle, Txt } from '@/components/ui';
 import { emptyProgram } from '@/logic/programGenerator';
 import { useProfile, useRequiredProfile } from '@/state/profile';
@@ -130,6 +131,8 @@ export default function Treinos() {
   return (
     <Screen>
       <Txt variant="h1">Fichas</Txt>
+
+      {atual ? <WeekStrip p={atual} /> : null}
 
       {atual ? (
         <FichaCard p={atual} atual editavel={minhas.some((p) => p.id === atual.id)} onUsar={() => {}} />
