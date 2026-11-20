@@ -615,6 +615,15 @@ export async function getAllExerciseHistory(db: SQLiteDatabase): Promise<Map<str
   return out;
 }
 
+/** Ficha, dia e data de todos os treinos concluídos (para a visão da semana). */
+export async function listDoneSessions(
+  db: SQLiteDatabase,
+): Promise<{ programa_id: string | null; dia_id: string | null; iniciado_em: string }[]> {
+  return db.getAllAsync(
+    "SELECT programa_id, dia_id, iniciado_em FROM sessions WHERE status = 'concluida' ORDER BY iniciado_em",
+  );
+}
+
 export async function listSessionDates(db: SQLiteDatabase, sinceIso: string): Promise<string[]> {
   const rows = await db.getAllAsync<{ iniciado_em: string }>(
     "SELECT iniciado_em FROM sessions WHERE status = 'concluida' AND iniciado_em >= ? ORDER BY iniciado_em",
