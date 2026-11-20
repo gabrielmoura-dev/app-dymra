@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { getExercise, getMachine, loadStepFor } from '@/catalog';
+import { getExercise, loadStepFor } from '@/catalog';
 import type { SessionExerciseRow, SetRow } from '@/db/repo';
 import type { Suggestion } from '@/logic/progression';
 import type { Effort } from '@/logic/types';
@@ -10,6 +10,7 @@ import { useStepOverrides } from '@/state/userCatalog';
 import { colors, radius, spacing } from '@/theme';
 
 import { ActionSheet } from './ActionSheet';
+import { Local } from './Local';
 import { confirmAction } from './confirm';
 import { Stepper, TextField } from './inputs';
 import { TechniqueQuick } from './TechniqueChecklist';
@@ -91,7 +92,6 @@ export function SessionExerciseCard(p: SessionExerciseCardProps) {
   }
 
   const step = loadStepFor(ex, overrides);
-  const machine = getMachine(ex.maquinaIds[0]);
   const done = p.sets.filter((s) => s.concluida === 1).length;
   const allDone = done === p.sets.length && p.sets.length > 0;
   const porTempo = ex.tipo === 'tempo';
@@ -122,11 +122,11 @@ export function SessionExerciseCard(p: SessionExerciseCardProps) {
           <Txt bold numberOfLines={1} color={allDone ? colors.muted : colors.text}>
             {ex.nome}
           </Txt>
-          <Txt variant="tiny">
-            {done}/{p.sets.length} séries
-            {original ? ' · trocado' : ''}
-          </Txt>
+          <Local ex={ex} extra={original ? 'trocado' : undefined} />
         </View>
+        <Txt variant="tiny" bold color={allDone ? colors.success : colors.muted}>
+          {done}/{p.sets.length}
+        </Txt>
         <Icon name="chevron-down" size={20} color={colors.muted} />
       </Pressable>
     );
@@ -155,8 +155,8 @@ export function SessionExerciseCard(p: SessionExerciseCardProps) {
             Exercício {p.numero} de {p.total} · {done}/{p.sets.length} séries
           </Txt>
           <Txt variant="h3">{ex.nome}</Txt>
+          <Local ex={ex} />
           <Txt variant="tiny">
-            {machine && machine.nome !== ex.nome ? `${machine.nome} · ` : ''}
             {porTempo ? '' : `${p.item.reps_min === p.item.reps_max ? p.item.reps_min : `${p.item.reps_min}–${p.item.reps_max}`} reps · `}
             {`descanso ${p.item.descanso_seg}s`}
           </Txt>

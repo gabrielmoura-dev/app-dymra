@@ -3,9 +3,10 @@ import { useSQLiteContext } from 'expo-sqlite';
 import { useState } from 'react';
 import { View } from 'react-native';
 
-import { getExercise, getProgram, PROGRAMS } from '@/catalog';
+import { getProgram, PROGRAMS } from '@/catalog';
 import type { Program } from '@/catalog/types';
 import { confirmAction } from '@/components/confirm';
+import { roteiro } from '@/components/Local';
 import { Button, Card, Chip, Icon, Row, Screen, SectionTitle, Txt } from '@/components/ui';
 import { emptyProgram } from '@/logic/programGenerator';
 import { useProfile, useRequiredProfile } from '@/state/profile';
@@ -48,9 +49,9 @@ function FichaCard({
                 {d.nome}
                 {d.foco ? ` · ${d.foco}` : ''}
               </Txt>
-              <Txt variant="tiny" numberOfLines={1}>
+              <Txt variant="tiny" numberOfLines={2}>
                 {d.exercicios.length
-                  ? d.exercicios.map((r) => getExercise(r.exercicioId)?.nome).filter(Boolean).join(' · ')
+                  ? `${d.exercicios.length} exercícios · ${roteiro(d).join(' → ')}`
                   : 'Sem exercícios ainda'}
               </Txt>
             </View>

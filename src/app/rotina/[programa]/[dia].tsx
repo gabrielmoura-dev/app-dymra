@@ -3,7 +3,8 @@ import { useSQLiteContext } from 'expo-sqlite';
 import { useState } from 'react';
 import { Alert, View } from 'react-native';
 
-import { getExercise, getMachine, MUSCLE_LABELS } from '@/catalog';
+import { getExercise, MUSCLE_LABELS } from '@/catalog';
+import { FotoMaquina, Local, roteiro } from '@/components/Local';
 import { MuscleMap } from '@/components/MuscleMap';
 import { Button, Card, Empty, Icon, Row, Screen, Txt } from '@/components/ui';
 import { getActiveSessionId } from '@/db/repo';
@@ -59,6 +60,10 @@ export default function RotinaDia() {
       </View>
       {d.exercicios.length > 0 ? (
         <>
+          <Card>
+            <Txt variant="label">Roteiro na academia</Txt>
+            <Txt>{roteiro(d).join('  →  ')}</Txt>
+          </Card>
           <MuscleMap values={intensity} mode="intensidade" height={200} />
           <Button title="Começar este treino" icon="play" onPress={iniciar} loading={busy} />
         </>
@@ -77,13 +82,15 @@ export default function RotinaDia() {
               <Txt bold color={colors.accent} style={{ width: 22 }}>
                 {i + 1}
               </Txt>
+              <FotoMaquina ex={ex} />
               <View style={{ flex: 1, gap: 2 }}>
                 <Txt bold>{ex.nome}</Txt>
+                <Local ex={ex} />
                 <Txt variant="tiny">
                   {r.duracaoSeg
                     ? `${r.series}× ${r.duracaoSeg >= 120 ? `${Math.round(r.duracaoSeg / 60)} min` : `${r.duracaoSeg} s`}`
                     : `${r.series}× ${r.repsMin === r.repsMax ? r.repsMin : `${r.repsMin}–${r.repsMax}`} reps`}
-                  {` · descanso ${r.descansoSeg}s · ${getMachine(ex.maquinaIds[0])?.nome}`}
+                  {` · descanso ${r.descansoSeg}s`}
                 </Txt>
                 <Txt variant="tiny" color={colors.muted}>
                   {ex.primarios.map((m) => MUSCLE_LABELS[m]).join(', ')}
