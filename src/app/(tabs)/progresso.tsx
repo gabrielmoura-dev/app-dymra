@@ -27,9 +27,12 @@ import {
   type BodyMeasure,
   type SessionListItem,
 } from "@/db/repo";
+import { consistency, VOLUME_ZONE_LABEL, volumeZone } from "@/logic/consistency";
 import { daysAgo, formatDateLong, formatDuration } from "@/logic/dates";
 import { muscleRecovery, weeklyVolume } from "@/logic/recovery";
 import { formatKg, personalBests, type PersonalBests } from "@/logic/strength";
+import { useProfile } from "@/state/profile";
+import { useProgram } from "@/state/userCatalog";
 import { colors, spacing } from "@/theme";
 
 type Aba = "visao" | "recordes" | "historico";
@@ -48,6 +51,9 @@ export default function Progresso() {
   >([]);
   const [measures, setMeasures] = useState<BodyMeasure[]>([]);
   const [visiveis, setVisiveis] = useState(PAGINA);
+  const { profile } = useProfile();
+  const programa = useProgram(profile?.programaId);
+  const constancia = consistency(sessions.map((s) => s.iniciado_em), programa?.dias.length ?? 3);
 
   useFocusEffect(
     useCallback(() => {
@@ -140,6 +146,22 @@ export default function Progresso() {
           </Card>
 
           <Card>
+            <Txt variant="h3">Constância</Txt>
+            <Row gap={spacing.lg}>
+              <Stat
+                label={`treinos nesta semana (meta ${constancia.meta})`}
+                value={`${constancia.nestaSemana}/${constancia.meta}`}
+                color={constancia.nestaSemana >= constancia.meta ? colors.accent : colors.text}
+              />
+              <Stat label="semanas seguidas" value={String(constancia.semanasSeguidas)} color={colors.warning} />
+            </Row>
+            <ProgressBar value={Math.min(1, constancia.nestaSemana / constancia.meta)} color={colors.accent} />
+            <Txt variant="tiny">
+              Treinar com regularidade pesa mais do que qualquer treino perfeito. A meta é o número de dias da sua ficha.
+            </Txt>
+          </Card>
+
+          <Card>
             <Txt variant="h3">Recuperação muscular</Txt>
             <Txt variant="tiny">
               Baseado nas séries dos últimos dias. Músculos grandes levam ~72 h,
@@ -155,7 +177,7 @@ export default function Progresso() {
             <Txt variant="h3">Séries por músculo (7 dias)</Txt>
             <Txt variant="tiny">
               Exercício principal conta 1 série; músculo auxiliar conta 0,5.
-              Para iniciantes, 6–12 por semana já dá ótimos resultados.
+              De 10 a 20 por semana é a faixa ideal; iniciantes já evoluem com 6 a 10.
             </Txt>
             {volSorted.length === 0 ? (
               <Txt color={colors.muted}>Nenhuma série nos últimos 7 dias.</Txt>
@@ -165,12 +187,12 @@ export default function Progresso() {
                   <Row style={{ justifyContent: "space-between" }}>
                     <Txt variant="small">{MUSCLE_LABELS[m]}</Txt>
                     <Txt variant="small" bold>
-                      {formatKg(v)}
+                      {formatKg(v)} · <Txt variant="tiny">{VOLUME_ZONE_LABEL[volumeZone(v)]}</Txt>
                     </Txt>
                   </Row>
                   <ProgressBar
                     value={v / volMax}
-                    color={v >= 6 ? colors.accent : colors.violet}
+                    color={volumeZone(v) === "alto" ? colors.warning : v >= 6 ? colors.accent : colors.violet}
                   />
                 </View>
               ))

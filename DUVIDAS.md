@@ -40,3 +40,9 @@ Não há Android SDK nem emulador neste computador, então testei as telas no na
 - Compartilhar com o app do Claude
 - Backup no Drive e restauração
 - Atualização pelo ar (EAS Update)
+
+## Melhorias baseadas em evidências (branch `melhorias-baseadas-em-evidencias`)
+
+- **Constância** (Progresso): treinos na semana contra a meta (dias da ficha) e semanas seguidas. A semana em andamento não quebra a sequência. Motivo: aderência é o maior preditor de resultado.
+- **Faixas de volume** (Progresso): cada músculo mostra "pouco" (<6 séries/semana), "bom para começar" (6–10), "faixa ideal" (10–20) ou "muito alto" (>20).
+- Já existiam: progressão dupla, aquecimento, recarga (deload), esforço percebido por série, recuperação por músculo e descanso maior em compostos.
