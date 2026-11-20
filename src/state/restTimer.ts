@@ -1,10 +1,28 @@
 import * as Haptics from 'expo-haptics';
+import Storage from 'expo-sqlite/kv-store';
 import { create } from 'zustand';
 
 import { notify } from '@/components/confirm';
 import { cancelNotification, scheduleRestEnd } from '@/services/notifications';
 
 let avisouSemNotificacao = false;
+
+const CHAVE = 'rest_timer_v1';
+
+type Salvo = Pick<RestTimerState, 'endsAt' | 'total' | 'notificationId' | 'proximo'>;
+
+/** Recupera o descanso em andamento se o app foi fechado e reaberto antes dele acabar. */
+function carregar(): Salvo {
+  const vazio: Salvo = { endsAt: null, total: 0, notificationId: null, proximo: '' };
+  try {
+    const raw = Storage.getItemSync(CHAVE);
+    if (!raw) return vazio;
+    const s = JSON.parse(raw) as Salvo;
+    return typeof s.endsAt === 'number' && s.endsAt > Date.now() ? s : vazio;
+  } catch {
+    return vazio;
+  }
+}
 
 interface RestTimerState {
   endsAt: number | null;
@@ -19,10 +37,7 @@ interface RestTimerState {
 }
 
 export const useRestTimer = create<RestTimerState>((set, get) => ({
-  endsAt: null,
-  total: 0,
-  notificationId: null,
-  proximo: '',
+  ...carregar(),
   start: async (seconds, proximo) => {
     await cancelNotification(get().notificationId);
     set({ endsAt: Date.now() + seconds * 1000, total: seconds, proximo, notificationId: null });
@@ -61,3 +76,13 @@ export const useRestTimer = create<RestTimerState>((set, get) => ({
     }
   },
 }));
+
+// Guarda o descanso a cada mudança, para a barra voltar depois de fechar o app.
+useRestTimer.subscribe((s) => {
+  try {
+    if (s.endsAt == null) Storage.removeItemSync(CHAVE);
+    else Storage.setItemSync(CHAVE, JSON.stringify({ endsAt: s.endsAt, total: s.total, notificationId: s.notificationId, proximo: s.proximo }));
+  } catch {
+    // sem armazenamento: o descanso continua funcionando na memória
+  }
+});

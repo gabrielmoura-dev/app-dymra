@@ -50,3 +50,4 @@ Não há Android SDK nem emulador neste computador, então testei as telas no na
 - **Meta da semana no resumo do treino**: ao terminar, o app mostra "x/meta" e quantos treinos faltam (feedback imediato de desempenho e revisão da meta).
 - **Revisão da meta**: o card Constância mostra também a semana passada e sugere reduzir a meta quando ela ficou difícil de cumprir.
 - **Acessibilidade e atrito (da pesquisa de mercado, ver `reports/`)**: texto de apoio com contraste ~5:1 (antes ~3:1); alvos de toque de 44 px em chips, botões de ícone e atalhos do exercício; o campo de peso/reps grava a cada dígito (tocar direto no ✓ com o teclado aberto não perde o valor); aviso único quando as notificações estão desligadas e o descanso só avisa com o app aberto.
+- **Descanso persistente**: se o app for fechado no meio do descanso, a barra volta na tela do treino com o tempo restante (e o aviso do sistema continua agendado).
