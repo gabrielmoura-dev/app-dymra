@@ -78,6 +78,8 @@ export default function Sessao() {
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [loaded, setLoaded] = useState(false);
   const [finalizando, setFinalizando] = useState(false);
+  /** Exercício que a pessoa abriu (`undefined` = escolha automática, `null` = todos recolhidos). */
+  const [escolhido, setEscolhido] = useState<number | null | undefined>(undefined);
 
   const reload = useCallback(async () => {
     const id = await getActiveSessionId(db);
@@ -294,6 +296,13 @@ export default function Sessao() {
 
   const total = detail.exercises.reduce((a, e) => a + e.sets.length, 0);
   const feitas = detail.exercises.reduce((a, e) => a + e.sets.filter((s) => s.concluida === 1).length, 0);
+  // Por padrão fica aberto o primeiro exercício com série por fazer.
+  const automatico =
+    detail.exercises.find((e) => e.sets.some((s) => s.concluida === 0))?.item.id ?? detail.exercises.at(-1)?.item.id ?? null;
+  const abertoId =
+    escolhido === undefined || (escolhido !== null && !detail.exercises.some((e) => e.item.id === escolhido))
+      ? automatico
+      : escolhido;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={['bottom']}>
@@ -304,13 +313,15 @@ export default function Sessao() {
         }}
       />
       <RestTimerBar />
-      <ScrollView contentContainerStyle={{ padding: spacing.lg, gap: spacing.xl, paddingBottom: 120 }} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={{ padding: spacing.lg, gap: spacing.md, paddingBottom: 120 }} keyboardShouldPersistTaps="handled">
         <Txt variant="small" color={colors.muted}>
-          {feitas} de {total} séries feitas · toque no ✓ ao terminar cada série
+          {feitas} de {total} séries feitas · toque num exercício para abrir
         </Txt>
         {detail.exercises.map(({ item, sets }, i) => (
           <SessionExerciseCard
             key={item.id}
+            aberto={abertoId === item.id}
+            onToggle={() => setEscolhido(abertoId === item.id ? null : item.id)}
             item={item}
             numero={i + 1}
             total={detail.exercises.length}

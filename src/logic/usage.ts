@@ -50,6 +50,3 @@ export function frequentIds(usage: Usage, min = MIN_VEZES): string[] {
     .sort((a, b) => compare(a[1], b[1]))
     .map(([id]) => id);
 }
-
-/** Com quantos exercícios frequentes a lista de exercícios passa a mostrar só eles. */
-export const MIN_PARA_ENXUGAR = 5;

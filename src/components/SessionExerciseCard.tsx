@@ -62,6 +62,9 @@ export interface SessionExerciseCardProps {
   onRemoveSet: (setId: number) => void;
   onRemoveExercise: () => void;
   onSaveNote: (nota: string) => void;
+  /** Só o exercício aberto mostra as séries; os outros ficam numa linha. */
+  aberto: boolean;
+  onToggle: () => void;
 }
 
 export function SessionExerciseCard(p: SessionExerciseCardProps) {
@@ -94,8 +97,43 @@ export function SessionExerciseCard(p: SessionExerciseCardProps) {
   const porTempo = ex.tipo === 'tempo';
   const semCarga = ex.tipo === 'peso-corporal' || porTempo;
 
+  const badge = (
+    <View style={[styles.badge, allDone && { backgroundColor: colors.success }, !p.aberto && !allDone && styles.badgeIdle]}>
+      {allDone ? (
+        <Icon name="checkmark" size={18} color={colors.accentText} />
+      ) : (
+        <Txt bold color={p.aberto ? colors.accentText : colors.muted}>
+          {p.numero}
+        </Txt>
+      )}
+    </View>
+  );
+
+  if (!p.aberto) {
+    return (
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ expanded: false }}
+        accessibilityLabel={`Abrir ${ex.nome}`}
+        onPress={p.onToggle}
+        style={({ pressed }) => [styles.compact, allDone && { borderColor: colors.success }, pressed && { opacity: 0.75 }]}>
+        {badge}
+        <View style={{ flex: 1, gap: 2 }}>
+          <Txt bold numberOfLines={1} color={allDone ? colors.muted : colors.text}>
+            {ex.nome}
+          </Txt>
+          <Txt variant="tiny">
+            {done}/{p.sets.length} séries
+            {original ? ' · trocado' : ''}
+          </Txt>
+        </View>
+        <Icon name="chevron-down" size={20} color={colors.muted} />
+      </Pressable>
+    );
+  }
+
   return (
-    <Card style={[styles.card, allDone && { borderColor: colors.success }]}>
+    <Card style={[styles.card, { borderColor: allDone ? colors.success : colors.accent }]}>
       <ActionSheet
         visible={menuAberto}
         title={ex.nome}
@@ -106,16 +144,13 @@ export function SessionExerciseCard(p: SessionExerciseCardProps) {
         ]}
       />
       <Row style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <View style={[styles.badge, allDone && { backgroundColor: colors.success }]}>
-          {allDone ? (
-            <Icon name="checkmark" size={18} color={colors.accentText} />
-          ) : (
-            <Txt bold color={colors.accentText}>
-              {p.numero}
-            </Txt>
-          )}
-        </View>
-        <Pressable style={{ flex: 1, gap: 2 }} onPress={() => router.push(`/exercicio/${ex.id}`)}>
+        {badge}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityState={{ expanded: true }}
+          accessibilityLabel={`Recolher ${ex.nome}`}
+          style={{ flex: 1, gap: 2 }}
+          onPress={p.onToggle}>
           <Txt variant="tiny" color={colors.faint}>
             Exercício {p.numero} de {p.total} · {done}/{p.sets.length} séries
           </Txt>
@@ -292,6 +327,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 2,
+  },
+  badgeIdle: { backgroundColor: colors.surface2, marginTop: 0 },
+  compact: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    minHeight: 56,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.lg,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.surface,
   },
   tool: {
     flexDirection: 'row',

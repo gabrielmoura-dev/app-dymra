@@ -12,8 +12,8 @@ import {
   Card,
   Chip,
   Empty,
-  Icon,
   ProgressBar,
+  Recolhivel,
   Row,
   Screen,
   Stat,
@@ -95,6 +95,13 @@ export default function Progresso() {
         .filter(([, v]) => v > 0)
         .sort((a, b) => b[1] - a[1])
     : [];
+  // Músculos ainda cansados (abaixo de 85% recuperados), do mais cansado para o menos.
+  const recuperando = recovery
+    ? (Object.entries(recovery) as [Muscle, number][])
+        .filter(([, v]) => v < 0.85)
+        .sort((a, b) => a[1] - b[1])
+        .map(([m]) => m)
+    : [];
   const pesos = measures
     .filter((m) => m.pesoKg != null)
     .map((m) => ({ data: m.data, valor: m.pesoKg as number }));
@@ -165,8 +172,16 @@ export default function Progresso() {
             </Txt>
           </Card>
 
-          <Card>
-            <Txt variant="h3">Recuperação muscular</Txt>
+          <Recolhivel
+            titulo="Recuperação muscular"
+            icon="body-outline"
+            iconColor={colors.violet}
+            resumo={
+              recuperando.length === 0
+                ? "Tudo recuperado"
+                : `Recuperando: ${recuperando.slice(0, 3).map((m) => MUSCLE_LABELS[m]).join(", ")}${recuperando.length > 3 ? ` e mais ${recuperando.length - 3}` : ""}`
+            }
+          >
             <Txt variant="tiny">
               Baseado nas séries dos últimos dias. Músculos grandes levam ~72 h,
               pequenos ~48 h.
@@ -175,7 +190,7 @@ export default function Progresso() {
               <MuscleMap values={recovery} mode="recuperacao" height={280} />
             ) : null}
             <RecoveryLegend />
-          </Card>
+          </Recolhivel>
 
           <Card>
             <Txt variant="h3">Séries por músculo (7 dias)</Txt>
@@ -203,18 +218,25 @@ export default function Progresso() {
             )}
           </Card>
 
-          <Card onPress={() => router.push("/corpo")}>
-            <Row style={{ justifyContent: "space-between" }}>
-              <Txt variant="h3">Peso corporal</Txt>
-              <Row gap={4}>
-                <Txt variant="small" color={colors.accent}>
-                  Corpo e fotos
-                </Txt>
-                <Icon name="chevron-forward" size={16} color={colors.accent} />
-              </Row>
-            </Row>
+          <Recolhivel
+            titulo="Peso corporal"
+            icon="scale-outline"
+            iconColor={colors.violet}
+            resumo={
+              pesos.length > 0
+                ? `Último: ${formatKg(pesos[pesos.length - 1].valor)} kg`
+                : "Nenhum registro ainda"
+            }
+          >
             <LineChart points={pesos} unit="kg" color={colors.violet} />
-          </Card>
+            <Button
+              small
+              variant="secondary"
+              icon="camera-outline"
+              title="Corpo e fotos"
+              onPress={() => router.push("/corpo")}
+            />
+          </Recolhivel>
         </>
       ) : null}
 

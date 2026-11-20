@@ -9,7 +9,7 @@ import { CATALOG_VERSION } from '@/catalog';
 import type { Goal } from '@/catalog/types';
 import { confirmAction, notify } from '@/components/confirm';
 import { formatInput, parseNumber, Stepper, TextField } from '@/components/inputs';
-import { Button, Card, Chip, Divider, Icon, Row, Screen, Txt } from '@/components/ui';
+import { Button, Chip, Divider, Recolhivel, Row, Screen, Txt } from '@/components/ui';
 import { formatDateLong } from '@/logic/dates';
 import { GOAL_LABELS } from '@/logic/progression';
 import { BackupError, exportBackup, importBackup } from '@/services/backup';
@@ -144,8 +144,7 @@ export default function Perfil() {
     <Screen>
       <Txt variant="h1">Perfil</Txt>
 
-      <Card>
-        <Txt variant="h3">Seus dados</Txt>
+      <Recolhivel titulo="Seus dados" icon="person-circle-outline" resumo={`${profile.nome} · ${formatInput(profile.alturaCm)} cm · ${formatInput(profile.pesoKg)} kg · ${GOAL_LABELS[profile.objetivo]}`}>
         <TextField label="Nome" value={nome} onChangeText={setNome} />
         <Row gap={spacing.md}>
           <TextField label="Altura" value={altura} onChangeText={setAltura} keyboardType="number-pad" suffix="cm" />
@@ -166,10 +165,12 @@ export default function Perfil() {
         <Linha label="Ficha atual">
           <Chip label={program?.nome ?? 'Nenhuma'} onPress={() => router.push('/treinos')} />
         </Linha>
-      </Card>
+      </Recolhivel>
 
-      <Card>
-        <Txt variant="h3">Treino</Txt>
+      <Recolhivel
+        titulo="Treino"
+        icon="barbell-outline"
+        resumo={`Descanso ${profile.descansoPadraoSeg}s · meta ${profile.metaSemanal ?? 3}x por semana${profile.sugerirAquecimento ? ' · com aquecimento' : ''}`}>
         <Txt variant="label">Descanso padrão (quando a ficha não define)</Txt>
         <Stepper
           value={profile.descansoPadraoSeg}
@@ -199,10 +200,16 @@ export default function Perfil() {
           decimals={false}
         />
         <Txt variant="tiny">Metas específicas e revisadas toda semana ajudam a manter a rotina. Aparece em Progresso.</Txt>
-      </Card>
+      </Recolhivel>
 
-      <Card>
-        <Txt variant="h3">Lembrete de treino</Txt>
+      <Recolhivel
+        titulo="Lembrete de treino"
+        icon="alarm-outline"
+        resumo={
+          profile.lembreteTreinoDias.length === 0
+            ? 'Desligado'
+            : `${profile.lembreteTreinoDias.map((d) => DIAS[d]).join(', ')} · ${profile.lembreteTreinoHora}h`
+        }>
         <Row wrap gap={6}>
           {DIAS.map((d, i) => {
             const on = profile.lembreteTreinoDias.includes(i);
@@ -231,13 +238,13 @@ export default function Perfil() {
           suffix="h"
           decimals={false}
         />
-      </Card>
+      </Recolhivel>
 
-      <Card>
-        <Row>
-          <Icon name="heart-circle-outline" color={colors.danger} />
-          <Txt variant="h3">Health Connect</Txt>
-        </Row>
+      <Recolhivel
+        titulo="Health Connect"
+        icon="heart-circle-outline"
+        iconColor={colors.danger}
+        resumo={profile.healthConnect ? 'Conectado' : 'Desligado'}>
         <Txt variant="small" color={colors.muted}>
           Salva seus treinos e seu peso no Health Connect e lê calorias e frequência cardíaca do relógio para o resumo do treino.
         </Txt>
@@ -249,33 +256,29 @@ export default function Perfil() {
           />
         </Linha>
         {profile.healthConnect ? <Button small variant="ghost" title="Gerenciar permissões" onPress={openHealthSettings} /> : null}
-      </Card>
+      </Recolhivel>
 
-      <Card>
-        <Row>
-          <Icon name="cloud-upload-outline" color={colors.violet} />
-          <Txt variant="h3">Backup</Txt>
-        </Row>
+      <Recolhivel
+        titulo="Backup"
+        icon="cloud-upload-outline"
+        iconColor={colors.violet}
+        resumo={`Último backup: ${profile.ultimoBackupEm ? formatDateLong(profile.ultimoBackupEm) : 'nunca'}`}>
         <Txt variant="small" color={colors.muted}>
           Seus dados ficam só neste celular. Faça backup e salve no Google Drive ou mande para você no WhatsApp. As fotos de progresso não entram no backup.
-        </Txt>
-        <Txt variant="tiny">
-          Último backup: {profile.ultimoBackupEm ? formatDateLong(profile.ultimoBackupEm) : 'nunca'}
         </Txt>
         <Row>
           <Button title="Fazer backup" variant="violet" onPress={backup} loading={busy === 'backup'} style={{ flex: 1 }} />
           <Button title="Restaurar" variant="ghost" onPress={restaurar} loading={busy === 'restore'} style={{ flex: 1 }} />
         </Row>
-      </Card>
+      </Recolhivel>
 
-      <Card>
-        <Txt variant="h3">Sobre</Txt>
-        <Txt variant="small" color={colors.muted}>
-          Dymra {Constants.expoConfig?.version ?? ''} · catálogo {CATALOG_VERSION}
-        </Txt>
+      <Recolhivel
+        titulo="Sobre"
+        icon="information-circle-outline"
+        resumo={`Dymra ${Constants.expoConfig?.version ?? ''} · catálogo ${CATALOG_VERSION}`}>
         <Txt variant="tiny">Atualização: {Updates.updateId ? Updates.updateId.slice(0, 8) : 'versão do APK'}</Txt>
         <Button small variant="secondary" icon="refresh" title="Procurar atualização" onPress={buscarAtualizacao} loading={busy === 'update'} />
-      </Card>
+      </Recolhivel>
     </Screen>
   );
 }

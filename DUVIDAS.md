@@ -57,4 +57,12 @@ Não há Android SDK nem emulador neste computador, então testei as telas no na
 - **Água removida**: saiu da tela Hoje, do Perfil, dos lembretes e do Health Connect.
 - **Fichas mais enxutas**: aparece só a ficha atual. As outras ficam em "Trocar ou criar ficha", em linhas compactas (toque para ver os treinos). Ao escolher uma ficha, a lista se recolhe.
 - **Máquinas mais usadas no topo**: dentro de cada área (Pernas, Costas…), a máquina usada em 2 treinos ou mais sobe, com "N× usada". O resto segue a ordem do catálogo.
-- **Exercícios**: quando a pessoa já tem 5 exercícios feitos em 2 treinos ou mais, a lista inicial mostra só "Seus mais usados" e um botão "Ver todos". Busca e filtros mostram tudo, com os mais usados primeiro. No começo, sem histórico, a lista completa aparece.
+- **Exercícios**: (substituído pelos cards por grupo, abaixo).
+
+## Telas em cards (20/11/2026)
+
+- **Treino em aberto**: só o exercício em andamento fica aberto. Os outros viram uma linha com nome e "x/y séries" (✓ verde quando terminados). Toque para abrir; abrir um recolhe o anterior.
+- **Máquinas**: cada área (Pernas, Pesos livres, Costas…) é um card fechado com o número de máquinas e a mais usada. As áreas onde a pessoa mais treina sobem.
+- **Exercícios**: card "Seus mais usados" aberto no topo (quando há histórico) e um card fechado por grupo (Pernas, Glúteos, Peito…). A busca mostra a lista direta.
+- **Progresso**: Recuperação muscular e Peso corporal começam recolhidos, com um resumo ("Tudo recuperado", "Último: 60 kg").
+- **Perfil**: todas as seções viram cards fechados com o resumo do que está configurado.

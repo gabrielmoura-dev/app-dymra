@@ -1,5 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import type { ComponentProps, ReactNode } from 'react';
+import { useState, type ComponentProps, type ReactNode } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -297,6 +297,62 @@ export function Bullet({ children, icon = 'ellipse', color = colors.accent }: { 
   );
 }
 
+/**
+ * Card que mostra só o título e um resumo; toque no cabeçalho abre o conteúdo.
+ * Pode ser controlado (`aberto` + `onToggle`) ou cuidar do próprio estado (`inicial`).
+ */
+export function Recolhivel({
+  titulo,
+  resumo,
+  icon,
+  iconColor = colors.muted,
+  aberto,
+  inicial = false,
+  onToggle,
+  children,
+  style,
+}: {
+  titulo: string;
+  resumo?: ReactNode;
+  icon?: IconName;
+  iconColor?: string;
+  aberto?: boolean;
+  inicial?: boolean;
+  onToggle?: () => void;
+  children: ReactNode;
+  style?: StyleProp<ViewStyle>;
+}) {
+  const [proprio, setProprio] = useState(inicial);
+  const open = aberto ?? proprio;
+  const toggle = onToggle ?? (() => setProprio((v) => !v));
+  return (
+    <View style={[styles.card, open && { gap: spacing.md }, style]}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ expanded: open }}
+        accessibilityLabel={titulo}
+        onPress={toggle}
+        style={({ pressed }) => [styles.collapseHeader, pressed && { opacity: 0.7 }]}>
+        {icon ? <Icon name={icon} color={iconColor} /> : null}
+        <View style={{ flex: 1, gap: 2 }}>
+          <Txt variant="h3">{titulo}</Txt>
+          {resumo != null && resumo !== '' ? (
+            typeof resumo === 'string' ? (
+              <Txt variant="tiny" numberOfLines={open ? undefined : 1}>
+                {resumo}
+              </Txt>
+            ) : (
+              resumo
+            )
+          ) : null}
+        </View>
+        <Icon name={open ? 'chevron-up' : 'chevron-down'} size={20} color={colors.muted} />
+      </Pressable>
+      {open ? children : null}
+    </View>
+  );
+}
+
 export function Divider() {
   return <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: colors.border, marginVertical: spacing.sm }} />;
 }
@@ -352,4 +408,5 @@ const styles = StyleSheet.create({
   progressTrack: { backgroundColor: colors.surface2, overflow: 'hidden' },
   empty: { alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.xl },
   bullet: { flexDirection: 'row', gap: spacing.sm, alignItems: 'flex-start' },
+  collapseHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 44 },
 });
