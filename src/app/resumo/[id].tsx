@@ -6,12 +6,15 @@ import { View } from 'react-native';
 import { getExercise } from '@/catalog';
 import { MuscleMap } from '@/components/MuscleMap';
 import { Button, Card, Icon, Row, Screen, Stat, Txt } from '@/components/ui';
-import { getExerciseHistory, getSessionDetail, type SessionDetail, type SetRow } from '@/db/repo';
+import { getExerciseHistory, getSessionDetail, listCompletedSessions, type SessionDetail, type SetRow } from '@/db/repo';
+import { consistency } from '@/logic/consistency';
 import { formatDuration } from '@/logic/dates';
 import { sessionMuscleIntensity } from '@/logic/recovery';
 import { detectRecords, formatKg, RECORD_LABELS, type RecordKind } from '@/logic/strength';
 import { compareExercise, motivationalMessage, sessionStats, type ExerciseComparison } from '@/logic/summary';
 import type { LoggedSet } from '@/logic/types';
+import { useProfile } from '@/state/profile';
+import { useProgram } from '@/state/userCatalog';
 import { colors, spacing } from '@/theme';
 
 const toLogged = (s: SetRow): LoggedSet => ({
@@ -32,11 +35,16 @@ export default function Resumo() {
   const db = useSQLiteContext();
   const [detail, setDetail] = useState<SessionDetail | null>(null);
   const [extra, setExtra] = useState<ExtraInfo>({ records: [], comparisons: [] });
+  const [datas, setDatas] = useState<string[]>([]);
+  const { profile } = useProfile();
+  const programa = useProgram(profile?.programaId);
+  const semana = consistency(datas, profile?.metaSemanal ?? programa?.dias.length ?? 3);
 
   useEffect(() => {
     (async () => {
       const sid = Number(id);
       const d = await getSessionDetail(db, sid);
+      listCompletedSessions(db, 200).then((l) => setDatas(l.map((x) => x.iniciado_em)));
       setDetail(d);
       if (!d) return;
       const records: ExtraInfo['records'] = [];
@@ -104,6 +112,22 @@ export default function Resumo() {
           </Row>
         ) : null}
       </Card>
+
+      {datas.length > 0 ? (
+        <Card>
+          <Row style={{ justifyContent: 'space-between' }}>
+            <Txt variant="h3">Meta da semana</Txt>
+            <Txt variant="h3" color={semana.nestaSemana >= semana.meta ? colors.accent : colors.text}>
+              {Math.min(semana.nestaSemana, 99)}/{semana.meta}
+            </Txt>
+          </Row>
+          <Txt variant="small" color={colors.muted}>
+            {semana.nestaSemana >= semana.meta
+              ? `Meta batida! ${semana.semanasSeguidas} ${semana.semanasSeguidas === 1 ? 'semana seguida' : 'semanas seguidas'}.`
+              : `Faltam ${semana.meta - semana.nestaSemana} ${semana.meta - semana.nestaSemana === 1 ? 'treino' : 'treinos'} para bater a meta.`}
+          </Txt>
+        </Card>
+      ) : null}
 
       {extra.records.length > 0 ? (
         <Card tone="accent">
