@@ -16,7 +16,7 @@ describe('consistency', () => {
   });
   it('semana atual incompleta não quebra a sequência', () => {
     const c = consistency([d('2026-11-09'), d('2026-11-11')], 2, now);
-    expect(c).toEqual({ nestaSemana: 0, meta: 2, semanasSeguidas: 1 });
+    expect(c).toEqual({ nestaSemana: 0, semanaPassada: 2, meta: 2, semanasSeguidas: 1 });
   });
   it('sem treinos = 0 e meta limitada', () => {
     expect(consistency([], 99, now).meta).toBe(7);

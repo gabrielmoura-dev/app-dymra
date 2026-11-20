@@ -156,6 +156,10 @@ export default function Progresso() {
               <Stat label="semanas seguidas" value={String(constancia.semanasSeguidas)} color={colors.warning} />
             </Row>
             <ProgressBar value={Math.min(1, constancia.nestaSemana / constancia.meta)} color={colors.accent} />
+            <Txt variant="small" color={colors.muted}>
+              Semana passada: {constancia.semanaPassada}/{constancia.meta}
+              {constancia.semanaPassada < constancia.meta && constancia.semanaPassada > 0 ? ' · se está difícil, reduza a meta em Perfil' : ''}
+            </Txt>
             <Txt variant="tiny">
               Treinar com regularidade pesa mais do que qualquer treino perfeito. Ajuste a meta em Perfil → Treino (padrão: dias da ficha).
             </Txt>

@@ -14,6 +14,8 @@ export function weekStart(date: Date): Date {
 export interface Consistency {
   /** Treinos (dias distintos) na semana atual. */
   nestaSemana: number;
+  /** Treinos (dias distintos) na semana anterior, para revisar a meta. */
+  semanaPassada: number;
   meta: number;
   /** Semanas seguidas, até a anterior, em que a meta foi batida (+ a atual, se já bateu). */
   semanasSeguidas: number;
@@ -35,6 +37,9 @@ export function consistency(datas: string[], metaSemanal: number, now: Date = ne
   }
   const atual = weekStart(now);
   const nestaSemana = diasPorSemana.get(atual.getTime())?.size ?? 0;
+  const anterior = new Date(atual);
+  anterior.setDate(anterior.getDate() - 7);
+  const semanaPassada = diasPorSemana.get(anterior.getTime())?.size ?? 0;
   let semanasSeguidas = nestaSemana >= meta ? 1 : 0;
   const w = new Date(atual);
   for (;;) {
@@ -42,7 +47,7 @@ export function consistency(datas: string[], metaSemanal: number, now: Date = ne
     if ((diasPorSemana.get(w.getTime())?.size ?? 0) >= meta) semanasSeguidas++;
     else break;
   }
-  return { nestaSemana, meta, semanasSeguidas };
+  return { nestaSemana, semanaPassada, meta, semanasSeguidas };
 }
 
 export type VolumeZone = 'baixo' | 'iniciante' | 'ideal' | 'alto';
