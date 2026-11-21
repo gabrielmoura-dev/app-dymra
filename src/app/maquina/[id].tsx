@@ -43,7 +43,6 @@ export default function MaquinaDetalhe() {
             gap: 6,
           }}>
           <Icon name="barbell" size={48} color={colors.faint} />
-          <Txt variant="tiny">Foto da máquina ainda não cadastrada</Txt>
         </View>
       )}
       <View style={{ gap: 4 }}>
@@ -54,7 +53,7 @@ export default function MaquinaDetalhe() {
         <Card>
           <Txt variant="h3">Passo de carga</Txt>
           <Txt variant="small" color={colors.muted}>
-            De quanto em quanto o peso sobe nesta máquina (ex.: placas de 5 kg, ou 7 kg). Usado nos botões − / + e nas sugestões de carga.
+            Quanto o peso sobe a cada toque no −/+.
           </Txt>
           <Stepper
             value={passo}

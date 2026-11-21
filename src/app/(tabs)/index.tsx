@@ -136,7 +136,7 @@ export default function Hoje() {
 
       {day && program ? (
         <Card>
-          <Txt variant="label">Próximo treino · {program.nome}</Txt>
+          <Txt variant="label">Próximo treino</Txt>
           <Txt variant="h2">{day.nome}</Txt>
           <Txt color={colors.muted}>
             {day.foco ? `${day.foco} · ` : ''}
@@ -187,8 +187,8 @@ export default function Hoje() {
               />
               <Txt variant="small" style={{ flex: 1 }}>
                 {i.tipo === 'recuperando'
-                  ? `${MUSCLE_LABELS[i.muscle]} ainda está se recuperando. Pegue um pouco mais leve ou foque na técnica.`
-                  : `${MUSCLE_LABELS[i.muscle]} teve poucas séries nos últimos 7 dias.`}
+                  ? `${MUSCLE_LABELS[i.muscle]} recuperando · vá mais leve`
+                  : `${MUSCLE_LABELS[i.muscle]}: poucas séries na semana`}
               </Txt>
             </Row>
           ))}
@@ -215,12 +215,9 @@ export default function Hoje() {
         <Card tone="violet" onPress={() => router.push('/perfil')}>
           <Row>
             <Icon name="cloud-upload-outline" color={colors.violet} />
-            <View style={{ flex: 1 }}>
-              <Txt variant="h3">Hora do backup</Txt>
-              <Txt variant="small" color={colors.muted}>
-                Seus treinos ficam só neste celular. Salve um backup no Drive para não perder nada.
-              </Txt>
-            </View>
+            <Txt variant="h3" style={{ flex: 1 }}>
+              Hora do backup
+            </Txt>
           </Row>
         </Card>
       ) : null}

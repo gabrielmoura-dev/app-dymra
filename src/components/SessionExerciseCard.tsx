@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { getExercise, getMachine, loadStepFor } from '@/catalog';
+import { getExercise, loadStepFor } from '@/catalog';
 import type { SessionExerciseRow, SetRow } from '@/db/repo';
 import type { Suggestion } from '@/logic/progression';
 import type { Effort } from '@/logic/types';
@@ -40,6 +40,14 @@ function ToolChip({
       </Txt>
     </Pressable>
   );
+}
+
+/** Descanso curto: "45 s", "2 min", "1:30 min". */
+function formatRest(seg: number): string {
+  if (seg < 60) return `${seg} s`;
+  const m = Math.floor(seg / 60);
+  const r = seg % 60;
+  return r === 0 ? `${m} min` : `${m}:${String(r).padStart(2, '0')} min`;
 }
 
 const EFFORTS: { v: Effort; label: string }[] = [
@@ -91,7 +99,6 @@ export function SessionExerciseCard(p: SessionExerciseCardProps) {
   }
 
   const step = loadStepFor(ex, overrides);
-  const machine = getMachine(ex.maquinaIds[0]);
   const done = p.sets.filter((s) => s.concluida === 1).length;
   const allDone = done === p.sets.length && p.sets.length > 0;
   const porTempo = ex.tipo === 'tempo';
@@ -139,6 +146,12 @@ export function SessionExerciseCard(p: SessionExerciseCardProps) {
         title={ex.nome}
         onClose={() => setMenuAberto(false)}
         options={[
+          {
+            label: 'Máquina ocupada',
+            icon: 'swap-horizontal',
+            onPress: () => router.push({ pathname: '/trocar', params: { seId: String(p.item.id) } }),
+          },
+          { label: p.note ? 'Editar nota' : 'Anotar', icon: 'create-outline', onPress: () => setShowNote(true) },
           { label: 'Ver ficha completa', icon: 'document-text-outline', onPress: () => router.push(`/exercicio/${ex.id}`) },
           { label: 'Tirar do treino de hoje', icon: 'trash-outline', destructive: true, onPress: p.onRemoveExercise },
         ]}
@@ -151,14 +164,10 @@ export function SessionExerciseCard(p: SessionExerciseCardProps) {
           accessibilityLabel={`Recolher ${ex.nome}`}
           style={{ flex: 1, gap: 2 }}
           onPress={p.onToggle}>
-          <Txt variant="tiny" color={colors.faint}>
-            Exercício {p.numero} de {p.total} · {done}/{p.sets.length} séries
-          </Txt>
           <Txt variant="h3">{ex.nome}</Txt>
           <Txt variant="tiny">
-            {machine && machine.nome !== ex.nome ? `${machine.nome} · ` : ''}
             {porTempo ? '' : `${p.item.reps_min === p.item.reps_max ? p.item.reps_min : `${p.item.reps_min}–${p.item.reps_max}`} reps · `}
-            {`descanso ${p.item.descanso_seg}s`}
+            {`descanso ${formatRest(p.item.descanso_seg)}`}
           </Txt>
           {original ? (
             <Txt variant="tiny" color={colors.violet}>
@@ -172,19 +181,6 @@ export function SessionExerciseCard(p: SessionExerciseCardProps) {
       <Row wrap gap={6}>
         <ToolChip icon="body-outline" label="Técnica" color={colors.violet} active={showTech} onPress={() => setShowTech((v) => !v)} />
         <ToolChip icon="play-circle-outline" label="Vídeo" color={colors.accent} onPress={() => router.push(`/exercicio/${ex.id}`)} />
-        <ToolChip
-          icon="swap-horizontal"
-          label="Máquina ocupada"
-          color={colors.warning}
-          onPress={() => router.push({ pathname: '/trocar', params: { seId: String(p.item.id) } })}
-        />
-        <ToolChip
-          icon="create-outline"
-          label={p.note ? 'Nota ✓' : 'Nota'}
-          color={colors.muted}
-          active={showNote}
-          onPress={() => setShowNote((v) => !v)}
-        />
       </Row>
 
       {showTech ? (
@@ -201,7 +197,15 @@ export function SessionExerciseCard(p: SessionExerciseCardProps) {
             placeholder="Ex.: banco na posição 4, pegada aberta"
             multiline
           />
-          <Button small variant="secondary" title="Salvar nota" onPress={() => p.onSaveNote(note)} />
+          <Button
+            small
+            variant="secondary"
+            title="Salvar nota"
+            onPress={() => {
+              p.onSaveNote(note);
+              setShowNote(false);
+            }}
+          />
         </View>
       ) : p.note ? (
         <Txt variant="small" color={colors.muted}>
@@ -211,15 +215,15 @@ export function SessionExerciseCard(p: SessionExerciseCardProps) {
 
       {p.suggestion ? (
         <View style={[styles.inner, { borderColor: colors.accentSoft }]}>
-          <Row gap={6}>
+          <Row gap={6} style={{ alignItems: 'flex-start' }}>
             <Icon name="sparkles" size={16} color={colors.accent} />
-            <Txt variant="small" bold color={colors.accent}>
-              {p.suggestion.titulo}
+            <Txt variant="small" color={colors.muted} style={{ flex: 1 }}>
+              <Txt variant="small" bold color={colors.accent}>
+                {p.suggestion.titulo}:
+              </Txt>{' '}
+              {p.suggestion.mensagem}
             </Txt>
           </Row>
-          <Txt variant="small" color={colors.muted}>
-            {p.suggestion.mensagem}
-          </Txt>
           {p.suggestion.ultimaVez ? <Txt variant="tiny">Última vez: {p.suggestion.ultimaVez}</Txt> : null}
         </View>
       ) : null}
@@ -261,11 +265,11 @@ export function SessionExerciseCard(p: SessionExerciseCardProps) {
                         />
                       ))}
                     </Row>
-                  ) : (
-                    <Txt variant="tiny" color={aquec ? colors.warning : undefined}>
-                      {aquec ? 'Aquecimento · carga leve, sem cansar' : titulo}
+                  ) : aquec ? (
+                    <Txt variant="tiny" color={colors.warning}>
+                      Aquecimento
                     </Txt>
-                  )}
+                  ) : null}
                 </Pressable>
                 <Pressable
                   accessibilityRole="checkbox"

@@ -49,7 +49,7 @@ const MAIS_USADOS = 'Seus mais usados';
 /** Os mesmos grupos do antigo filtro (Pernas, Glúteos…), agora como cards que se abrem. */
 const GRUPOS: { label: string; muscles: Muscle[] }[] = [...FILTERS, { label: 'Cardio', muscles: [] }];
 
-/** Um exercício da lista: nome com a estrela de favorito no canto direito e, embaixo, músculos e máquina. */
+/** Um exercício da lista: nome com a estrela de favorito no canto direito e, embaixo, os músculos. */
 export function ExerciseRow({ e, vezes = 0, onPick, inset }: { e: Exercise; vezes?: number; onPick: () => void; inset?: boolean }) {
   return (
     <Card onPress={onPick} style={[{ paddingVertical: 12, gap: 2 }, inset && { backgroundColor: colors.surface2 }]}>
@@ -61,7 +61,7 @@ export function ExerciseRow({ e, vezes = 0, onPick, inset }: { e: Exercise; veze
       </Row>
       <Row style={{ justifyContent: 'space-between' }}>
         <Txt variant="tiny" style={{ flex: 1 }}>
-          {e.primarios.map((m) => MUSCLE_LABELS[m]).join(', ') || 'Cardio'} · {getMachine(e.maquinaIds[0])?.nome}
+          {e.primarios.map((m) => MUSCLE_LABELS[m]).join(', ') || 'Cardio'}
         </Txt>
         {vezes >= MIN_VEZES ? (
           <Txt variant="tiny" color={colors.accent}>

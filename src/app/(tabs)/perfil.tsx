@@ -177,7 +177,7 @@ export default function Perfil() {
         titulo="Treino"
         icon="barbell-outline"
         resumo={`Descanso ${profile.descansoPadraoSeg}s · meta ${profile.metaSemanal ?? 3}x por semana${profile.sugerirAquecimento ? ' · com aquecimento' : ''}`}>
-        <Txt variant="label">Descanso padrão (quando a ficha não define)</Txt>
+        <Txt variant="label">Descanso padrão</Txt>
         <Stepper
           value={profile.descansoPadraoSeg}
           onChange={(v) => v != null && update({ descansoPadraoSeg: Math.max(15, Math.round(v)) })}
@@ -193,9 +193,6 @@ export default function Perfil() {
             trackColor={{ true: colors.accent, false: colors.surface2 }}
           />
         </Linha>
-        <Txt variant="tiny">
-          No primeiro exercício pesado de pernas e no de tronco: 1×12 com metade da carga e, acima de 30 kg, mais 1×6 com 3/4.
-        </Txt>
         <Txt variant="label">Meta de treinos por semana</Txt>
         <Stepper
           value={profile.metaSemanal ?? 3}
@@ -205,7 +202,6 @@ export default function Perfil() {
           suffix="x"
           decimals={false}
         />
-        <Txt variant="tiny">Metas específicas e revisadas toda semana ajudam a manter a rotina. Aparece em Progresso.</Txt>
       </Recolhivel>
 
       <Recolhivel
@@ -251,9 +247,6 @@ export default function Perfil() {
           <Icon name="heart-circle-outline" color={colors.danger} />
           <Txt variant="h3">Health Connect</Txt>
         </Row>
-        <Txt variant="small" color={colors.muted}>
-          Salva seus treinos e seu peso no Health Connect e lê calorias e frequência cardíaca do relógio para o resumo do treino.
-        </Txt>
         <Linha label={hc === 'disponivel' ? 'Conectar' : hc === 'precisa-atualizar' ? 'Atualize o Health Connect' : 'Indisponível neste aparelho'}>
           <Switch
             value={profile.healthConnect}
@@ -270,7 +263,7 @@ export default function Perfil() {
           <Txt variant="h3">Backup</Txt>
         </Row>
         <Txt variant="small" color={colors.muted}>
-          Seus dados ficam só neste celular. Faça backup e salve no Google Drive ou mande para você no WhatsApp. As fotos de progresso não entram no backup.
+          Salve no Drive ou WhatsApp para não perder nada.
         </Txt>
         <Txt variant="tiny">
           Último backup: {profile.ultimoBackupEm ? formatDateLong(profile.ultimoBackupEm) : 'nunca'}
@@ -286,7 +279,6 @@ export default function Perfil() {
         <Txt variant="small" color={colors.muted}>
           Dymra {Constants.expoConfig?.version ?? ''} · catálogo {CATALOG_VERSION}
         </Txt>
-        <Txt variant="tiny">Atualização: {Updates.updateId ? Updates.updateId.slice(0, 8) : 'versão do APK'}</Txt>
         <Button small variant="secondary" icon="refresh" title="Procurar atualização" onPress={buscarAtualizacao} loading={busy === 'update'} />
       </Card>
     </Screen>

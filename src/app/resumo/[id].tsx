@@ -168,15 +168,6 @@ export default function Resumo() {
         <MuscleMap values={intensity} mode="intensidade" height={220} />
       </Card>
 
-      <Card>
-        <Row>
-          <Icon name="restaurant-outline" color={colors.accent} />
-          <Txt variant="small" style={{ flex: 1 }}>
-            Capriche na proteína nas próximas refeições e durma bem para ajudar na recuperação.
-          </Txt>
-        </Row>
-      </Card>
-
       <Button title="Voltar ao início" icon="home" onPress={() => router.replace('/')} />
       <Button title="Ver detalhes do treino" variant="ghost" onPress={() => router.replace(`/historico/${detail.session.id}`)} />
     </Screen>

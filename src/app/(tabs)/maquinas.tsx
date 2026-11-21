@@ -3,19 +3,17 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { View } from 'react-native';
 
-import { exercisesForMachine, getExercise, MACHINES, machineStep } from '@/catalog';
+import { exercisesForMachine, getExercise, MACHINES } from '@/catalog';
 import { ExercisePicker, ExerciseRow } from '@/components/ExercisePicker';
 import { Button, Card, Chip, Empty, Icon, Recolhivel, Row, Screen, Txt } from '@/components/ui';
-import { formatKg } from '@/logic/strength';
 import { machineUsage, MIN_VEZES, rankByUsage } from '@/logic/usage';
 import { useExerciseUsage } from '@/state/usage';
-import { useFavorites, useStepOverrides } from '@/state/userCatalog';
+import { useFavorites } from '@/state/userCatalog';
 import { colors, radius } from '@/theme';
 
 export default function Maquinas() {
   const [aba, setAba] = useState<'maquinas' | 'exercicios' | 'favoritos'>('maquinas');
   const favoritos = useFavorites();
-  const overrides = useStepOverrides();
   const usage = useExerciseUsage();
   const porMaquina = machineUsage(usage, (id) => getExercise(id)?.maquinaIds ?? []);
   const [aberta, setAberta] = useState<string | null>(null);
@@ -90,7 +88,6 @@ export default function Maquinas() {
                     </Row>
                     <Txt variant="tiny">
                       {exercisesForMachine(m.id).length} {exercisesForMachine(m.id).length === 1 ? 'exercício' : 'exercícios'}
-                      {machineStep(m, overrides) > 0 ? ` · sobe de ${formatKg(machineStep(m, overrides))} em ${formatKg(machineStep(m, overrides))} kg` : ''}
                     </Txt>
                   </View>
                   <Icon name="chevron-forward" color={colors.muted} size={18} />

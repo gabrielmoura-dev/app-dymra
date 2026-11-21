@@ -315,7 +315,7 @@ export default function Sessao() {
       <RestTimerBar />
       <ScrollView contentContainerStyle={{ padding: spacing.lg, gap: spacing.md, paddingBottom: 120 }} keyboardShouldPersistTaps="handled">
         <Txt variant="small" color={colors.muted}>
-          {feitas} de {total} séries feitas · toque num exercício para abrir
+          {feitas} de {total} séries
         </Txt>
         {detail.exercises.map(({ item, sets }, i) => (
           <SessionExerciseCard

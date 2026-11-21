@@ -166,13 +166,11 @@ export default function ExercicioDetalhe() {
                   <Txt bold>
                     {a.exercise.id === ex.id ? `Mesmo exercício: ${getMachine(a.machineId)?.nome}` : a.exercise.nome}
                   </Txt>
-                  <Txt variant="tiny">{a.motivo}</Txt>
                 </View>
                 {a.exercise.id !== ex.id ? <Icon name="chevron-forward" color={colors.muted} size={18} /> : null}
               </Row>
             </Pressable>
           ))}
-          <Txt variant="tiny">Durante o treino, toque em “Máquina ocupada” para trocar.</Txt>
         </Recolhivel>
       ) : null}
     </Screen>

@@ -3,7 +3,7 @@ import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 
-import { EXERCISES, getExercise, getMachine, MUSCLE_LABELS } from '@/catalog';
+import { EXERCISES, getExercise, getMachine } from '@/catalog';
 import { Card, Empty, Icon, Row, Screen, Txt } from '@/components/ui';
 import { getSessionExercise, swapSessionExercise, type SessionExerciseRow } from '@/db/repo';
 import { findAlternatives, type Alternative } from '@/logic/alternatives';
@@ -11,25 +11,22 @@ import { suggestionFor } from '@/state/planning';
 import { colors } from '@/theme';
 
 function Item({ a, onPress }: { a: Alternative; onPress: () => void }) {
+  const maquina = getMachine(a.machineId)?.nome;
   return (
     <Card onPress={onPress}>
-        <Row style={{ justifyContent: 'space-between' }}>
-          <View style={{ flex: 1, gap: 2 }}>
-            <Txt variant="h3">{a.exercise.nome}</Txt>
+      <Row style={{ justifyContent: 'space-between' }}>
+        <View style={{ flex: 1, gap: 2 }}>
+          <Txt variant="h3">{a.exercise.nome}</Txt>
+          {maquina && maquina !== a.exercise.nome ? (
             <Txt variant="small" color={colors.muted}>
-              {getMachine(a.machineId)?.nome}
+              {maquina}
             </Txt>
-          </View>
-          <Icon name="swap-horizontal" color={colors.accent} />
-        </Row>
-        <Row wrap gap={6}>
-          <Txt variant="tiny" color={colors.accent}>
-            {a.motivo}
-          </Txt>
-          <Txt variant="tiny">· {a.exercise.primarios.map((m) => MUSCLE_LABELS[m]).join(', ')}</Txt>
-        </Row>
-      </Card>
-    );
+          ) : null}
+        </View>
+        <Icon name="swap-horizontal" color={colors.accent} />
+      </Row>
+    </Card>
+  );
 }
 
 export default function Trocar() {
@@ -67,8 +64,7 @@ export default function Trocar() {
   return (
     <Screen edges={['bottom']}>
       <Txt color={colors.muted}>
-        <Txt bold>{getMachine(current.maquinaIds[0])?.nome}</Txt> ocupada? Escolha uma alternativa. A troca vale só para o
-        treino de hoje.
+        <Txt bold>{getMachine(current.maquinaIds[0])?.nome}</Txt> ocupada? Escolha outra:
       </Txt>
       {original ? (
         <Card tone="violet" onPress={() => escolher(original.id)}>
@@ -76,7 +72,6 @@ export default function Trocar() {
             <Icon name="arrow-undo" color={colors.violet} />
             <View style={{ flex: 1 }}>
               <Txt variant="h3">Voltar para {original.nome}</Txt>
-              <Txt variant="tiny">A máquina liberou</Txt>
             </View>
           </Row>
         </Card>

@@ -3,7 +3,7 @@ import { useSQLiteContext } from 'expo-sqlite';
 import { useState } from 'react';
 import { View } from 'react-native';
 
-import { getExercise, getProgram, PROGRAMS } from '@/catalog';
+import { getProgram, PROGRAMS } from '@/catalog';
 import type { Program } from '@/catalog/types';
 import { confirmAction } from '@/components/confirm';
 import { WeekStrip } from '@/components/WeekStrip';
@@ -27,17 +27,11 @@ function FichaCard({
   return (
     <Card tone={atual ? 'accent' : 'default'}>
       <Row style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <View style={{ flex: 1, gap: 2 }}>
-          <Txt variant="h3">{p.nome}</Txt>
-          <Txt variant="tiny">{editavel ? 'Criada neste celular' : `de ${p.dono}`}</Txt>
-        </View>
+        <Txt variant="h3" style={{ flex: 1 }}>
+          {p.nome}
+        </Txt>
         {atual ? <Chip label="Sua ficha" active /> : <Chip label="Usar esta" onPress={onUsar} />}
       </Row>
-      {p.descricao ? (
-        <Txt variant="small" color={colors.muted}>
-          {p.descricao}
-        </Txt>
-      ) : null}
       {p.dias.map((d) => (
         <Card
           key={d.id}
@@ -49,9 +43,9 @@ function FichaCard({
                 {d.nome}
                 {d.foco ? ` · ${d.foco}` : ''}
               </Txt>
-              <Txt variant="tiny" numberOfLines={1}>
+              <Txt variant="tiny">
                 {d.exercicios.length
-                  ? d.exercicios.map((r) => getExercise(r.exercicioId)?.nome).filter(Boolean).join(' · ')
+                  ? `${d.exercicios.length} ${d.exercicios.length === 1 ? 'exercício' : 'exercícios'}`
                   : 'Sem exercícios ainda'}
               </Txt>
             </View>
@@ -85,7 +79,7 @@ function FichaLinha({ p, editavel, onUsar }: { p: Program; editavel: boolean; on
             {p.nome}
           </Txt>
           <Txt variant="tiny">
-            {p.dias.length} {p.dias.length === 1 ? 'treino' : 'treinos'} · {editavel ? 'criada neste celular' : `de ${p.dono}`}
+            {p.dias.length} {p.dias.length === 1 ? 'treino' : 'treinos'}
           </Txt>
         </View>
         <Chip label="Usar esta" onPress={onUsar} />

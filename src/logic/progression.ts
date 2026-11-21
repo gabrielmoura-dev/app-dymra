@@ -118,7 +118,7 @@ export function suggestNext(input: ProgressionInput): Suggestion {
         reps: null,
         duracaoSeg: prox,
         titulo: `Tente ${formatSeconds(prox)}`,
-        mensagem: 'Você completou o tempo em todas as séries. Vamos aumentar um pouco.',
+        mensagem: 'Você completou o tempo em todas as séries.',
         ultimaVez,
       };
     }
@@ -129,10 +129,10 @@ export function suggestNext(input: ProgressionInput): Suggestion {
       duracaoSeg: alvo,
       titulo: input.cardio ? `${formatSeconds(alvo)} de cardio` : `${formatSeconds(alvo)} por série`,
       mensagem: input.cardio
-        ? 'Ritmo moderado: dá para conversar com frases curtas. Ótimo aquecimento.'
+        ? 'Ritmo moderado.'
         : history.length
-          ? 'Mantenha o tempo e foque na postura.'
-          : 'Segure com a postura perfeita. Se cansar antes, pare e descanse.',
+          ? 'Mantenha o tempo.'
+          : 'Pare se perder a postura.',
       ultimaVez,
     };
   }
@@ -146,8 +146,8 @@ export function suggestNext(input: ProgressionInput): Suggestion {
       titulo: 'Primeira vez',
       mensagem:
         tipo === 'peso-corporal'
-          ? `Faça até ${repsMax} repetições com boa técnica.`
-          : `Escolha um peso em que você consiga ${repsMax} repetições com boa técnica, sentindo que ainda sobrariam 2 ou 3.`,
+          ? `Até ${repsMax} reps com boa técnica.`
+          : `Peso para ${repsMax} reps com folga.`,
       ultimaVez,
     };
   }
@@ -164,8 +164,8 @@ export function suggestNext(input: ProgressionInput): Suggestion {
       duracaoSeg: null,
       titulo: hitAll ? 'Hora de dificultar' : `Tente ${Math.min(repsMax, best + 1)} repetições`,
       mensagem: hitAll
-        ? 'Você fez o máximo da faixa em todas as séries. Faça mais devagar (3 s na descida) ou segure um peso leve.'
-        : 'Tente uma repetição a mais que da última vez, mantendo a técnica.',
+        ? 'Faça mais devagar ou segure um peso leve.'
+        : 'Uma a mais que da última vez.',
       ultimaVez,
     };
   }
@@ -189,8 +189,8 @@ export function suggestNext(input: ProgressionInput): Suggestion {
       duracaoSeg: null,
       titulo: `Suba para ${formatKg(novo)} kg`,
       mensagem: allEasy
-        ? `Ficou fácil: você fez ${repsMax} repetições em todas as séries. Suba a carga e comece com ${repsMin} repetições.`
-        : `Você bateu ${repsMax} repetições em todas as séries. Suba a carga e comece com ${repsMin} repetições.`,
+        ? `Ficou fácil. Comece com ${repsMin} reps.`
+        : `Comece com ${repsMin} reps.`,
       ultimaVez,
     };
   }
@@ -205,7 +205,7 @@ export function suggestNext(input: ProgressionInput): Suggestion {
       reps: repsMin,
       duracaoSeg: null,
       titulo: `Reduza para ${formatKg(novo)} kg`,
-      mensagem: `Nas duas últimas vezes você ficou abaixo de ${repsMin} repetições. Reduza um pouco e foque na técnica.`,
+      mensagem: `Abaixo de ${repsMin} reps nas últimas vezes.`,
       ultimaVez,
     };
   }
@@ -226,8 +226,7 @@ export function suggestNext(input: ProgressionInput): Suggestion {
       reps: repsMax,
       duracaoSeg: null,
       titulo: 'Semana de recarga',
-      mensagem:
-        'Três treinos com a mesma carga sem ganhar repetições. Reduza cerca de 10% hoje, faça com calma e volte a progredir no próximo.',
+      mensagem: 'Uns 10% mais leve hoje, com calma.',
       ultimaVez,
     };
   }
@@ -240,7 +239,7 @@ export function suggestNext(input: ProgressionInput): Suggestion {
     reps: alvo,
     duracaoSeg: null,
     titulo: `${formatKg(last.peso)} kg × ${alvo}`,
-    mensagem: `Mantenha a carga e tente chegar a ${alvo} repetições. Quando fizer ${repsMax} em todas as séries, a carga sobe.`,
+    mensagem: `Com ${repsMax} em todas as séries, a carga sobe.`,
     ultimaVez,
   };
 }

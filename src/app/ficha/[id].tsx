@@ -3,7 +3,7 @@ import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 
-import { getExercise, getMachine } from '@/catalog';
+import { getExercise } from '@/catalog';
 import type { Program, RoutineDay, RoutineExercise } from '@/catalog/types';
 import { confirmAction } from '@/components/confirm';
 import { Stepper, TextField } from '@/components/inputs';
@@ -34,12 +34,9 @@ function ExercicioDaFicha({
   return (
     <View style={{ gap: spacing.sm, paddingVertical: spacing.sm, borderTopWidth: index === 0 ? 0 : 1, borderColor: colors.border }}>
       <Row style={{ justifyContent: 'space-between' }}>
-        <View style={{ flex: 1, gap: 2 }}>
-          <Txt bold>
-            {index + 1}. {ex?.nome ?? `${r.exercicioId} (fora do catálogo)`}
-          </Txt>
-          {ex ? <Txt variant="tiny">{getMachine(ex.maquinaIds[0])?.nome}</Txt> : null}
-        </View>
+        <Txt bold style={{ flex: 1 }}>
+          {index + 1}. {ex?.nome ?? `${r.exercicioId} (fora do catálogo)`}
+        </Txt>
         <IconButton icon="chevron-up" label="Subir" size={18} onPress={() => index > 0 && onMove(-1)} color={index > 0 ? colors.text : colors.faint} />
         <IconButton
           icon="chevron-down"

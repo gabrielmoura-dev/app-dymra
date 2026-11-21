@@ -122,20 +122,21 @@ export default function Progresso() {
       {aba === "visao" ? (
         <>
           <Card>
+            <Txt variant="h3">Últimos 30 dias</Txt>
             <Row gap={spacing.lg}>
               <Stat
-                label="treinos em 30 dias"
+                label="treinos"
                 value={String(ult30.length)}
                 color={colors.accent}
               />
               <Stat
-                label="tempo em 30 dias"
+                label="tempo"
                 value={formatDuration(
                   ult30.reduce((a, s) => a + (s.duracao_seg ?? 0), 0),
                 )}
               />
               <Stat
-                label="kcal em 30 dias"
+                label="kcal"
                 value={String(
                   Math.round(ult30.reduce((a, s) => a + (s.kcal ?? 0), 0)),
                 )}
@@ -185,7 +186,6 @@ export default function Progresso() {
             }
           >
             <LineChart points={pesos} unit="kg" color={colors.violet} />
-            <Txt variant="tiny">Atualize o peso em Perfil → Seus dados.</Txt>
           </Recolhivel>
         </>
       ) : null}
